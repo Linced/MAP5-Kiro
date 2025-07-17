@@ -40,6 +40,21 @@ export interface QueryOptions {
   filters?: Filter[];
 }
 
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  totalCount: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface ColumnInfo {
+  name: string;
+  type: string;
+  nullable: boolean;
+}
+
 export interface Filter {
   column: string;
   operator: 'eq' | 'gt' | 'lt' | 'contains';
@@ -66,3 +81,35 @@ export interface SuccessResponse<T = any> {
 }
 
 export type ApiResponse<T = any> = SuccessResponse<T> | ErrorResponse;
+
+// Chart types
+export interface ChartDataPoint {
+  x: any;
+  y: number;
+}
+
+export interface ChartDataset {
+  label: string;
+  data: ChartDataPoint[];
+  backgroundColor?: string;
+  borderColor?: string;
+}
+
+export interface ChartData {
+  labels: string[];
+  datasets: ChartDataset[];
+}
+
+export interface ChartOptions {
+  uploadId?: string;
+  xColumn: string;
+  yColumn: string;
+  chartType: 'line' | 'bar';
+  aggregation?: 'sum' | 'avg' | 'count' | 'min' | 'max';
+  groupBy?: string;
+}
+
+export interface ChartValidationResult {
+  isValid: boolean;
+  errors: string[];
+}

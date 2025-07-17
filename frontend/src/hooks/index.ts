@@ -1,2 +1,2 @@
-// Custom React hooks will be implemented here
-export {};
+// Custom React hooks
+export { useCalculations } from './useCalculations';

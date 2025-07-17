@@ -22,7 +22,7 @@ app.get('/health', (_req, res) => {
 });
 
 // Import routes
-import { authRoutes, uploadRoutes, dataRoutes, calculationRoutes, chartRoutes } from './routes';
+import { authRoutes, uploadRoutes, dataRoutes, calculationRoutes, chartRoutes, strategyRoutes, bucketRoutes, tagRoutes } from './routes';
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -30,6 +30,9 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/data', dataRoutes);
 app.use('/api/calculations', calculationRoutes);
 app.use('/api/charts', chartRoutes);
+app.use('/api/strategies', strategyRoutes);
+app.use('/api/buckets', bucketRoutes);
+app.use('/api/tags', tagRoutes);
 
 // Placeholder for API routes
 app.get('/api', (_req, res) => {

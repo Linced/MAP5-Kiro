@@ -56,11 +56,6 @@
 
 - [x] 7. Build chart data API
 
-
-
-
-
-
   - Create chart data service to format data for Chart.js
   - Implement data aggregation utilities for chart optimization
   - Build API endpoints for line and bar chart data
@@ -68,7 +63,7 @@
   - Write performance optimizations for chart data queries
   - _Requirements: 5.1, 5.2, 5.6_
 
-- [ ] 8. Create authentication frontend components
+- [x] 8. Create authentication frontend components
 
   - Build LoginForm component with validation and error handling
   - Create RegisterForm component with email verification flow
@@ -78,7 +73,7 @@
   - Add localStorage management for authentication tokens
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6_
 
-- [ ] 9. Build file upload frontend interface
+- [x] 9. Build file upload frontend interface
 
   - Create FileUpload component with drag-and-drop support
   - Implement upload progress indication and error display
@@ -87,7 +82,7 @@
   - Add upload history and file management interface
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 10. Implement data table with TanStack Table
+- [x] 10. Implement data table with TanStack Table
 
   - Create DataTable component with sorting and filtering capabilities
   - Build ColumnToggle component for show/hide column functionality
@@ -97,7 +92,7 @@
   - Write loading states and empty data handling
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
 
-- [ ] 11. Build calculation interface components
+- [x] 11. Build calculation interface components
 
   - Create FormulaBuilder component with syntax highlighting
   - Implement CalcPreview component showing first 10 calculated values
@@ -107,6 +102,11 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
 - [ ] 12. Implement chart visualization components
+
+
+
+
+
 
   - Create LineChart component using Chart.js with basic interactivity
   - Build BarChart component with hover tooltips and zoom functionality

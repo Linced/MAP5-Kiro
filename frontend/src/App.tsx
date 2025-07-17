@@ -1,36 +1,46 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { LoginForm, RegisterForm, ProtectedRoute, EmailVerification } from './components/auth';
+import { Dashboard } from './components/layout/Dashboard';
+import { UploadPage } from './components/upload';
+import { DataPage } from './components/data';
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow">
-          <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            <h1 className="text-3xl font-bold text-gray-900">TradeInsight MVP</h1>
-          </div>
-        </header>
-        
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <Routes>
-            <Route path="/" element={
-              <div className="px-4 py-6 sm:px-0">
-                <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center">
-                  <div className="text-center">
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-4">
-                      Welcome to TradeInsight
-                    </h2>
-                    <p className="text-gray-500">
-                      Your trading data analysis platform is being built...
-                    </p>
-                  </div>
-                </div>
-              </div>
-            } />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/register" element={<RegisterForm />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/upload" 
+            element={
+              <ProtectedRoute>
+                <UploadPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/data" 
+            element={
+              <ProtectedRoute>
+                <DataPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
