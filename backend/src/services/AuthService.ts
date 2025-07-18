@@ -202,4 +202,34 @@ export class AuthService implements IAuthService {
 
     return UserModel.emailExists(email);
   }
+
+  /**
+   * Development-only method to verify email without token
+   */
+  async devVerifyEmail(email: string): Promise<boolean> {
+    // Validate email
+    const { error } = AuthService.emailSchema.validate(email);
+    if (error) {
+      throw new Error('Invalid email format');
+    }
+
+    // Find user
+    const user = await UserModel.findByEmail(email);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Check if already verified
+    if (user.emailVerified) {
+      throw new Error('Email is already verified');
+    }
+
+    // Verify email directly by user ID
+    const success = await UserModel.verifyEmailById(user.id);
+    if (!success) {
+      throw new Error('Failed to verify email');
+    }
+
+    return true;
+  }
 }

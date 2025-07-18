@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { initializeDatabase, closeDatabase } from './database';
+import { logger } from './utils/logger';
 
 // Load environment variables
 dotenv.config();
@@ -39,28 +40,29 @@ app.get('/api', (_req, res) => {
   res.json({ message: 'TradeInsight API is running' });
 });
 
-// Error handling middleware
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    error: {
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Something went wrong!'
-    }
-  });
-});
+// Import enhanced error handling utilities
+import { 
+  enhancedErrorHandler, 
+  notFoundHandler, 
+  requestTimeout,
+  setupGlobalErrorHandlers,
+  errorMetricsMiddleware
+} from './middleware/errorHandling';
 
-// 404 handler
-app.use('*', (_req, res) => {
-  res.status(404).json({
-    success: false,
-    error: {
-      code: 'NOT_FOUND',
-      message: 'Route not found'
-    }
-  });
-});
+// Setup global error handlers for unhandled rejections and exceptions
+setupGlobalErrorHandlers();
+
+// Request timeout middleware
+app.use(requestTimeout(30000)); // 30 second timeout
+
+// 404 handler - must come before global error handler
+app.use('*', notFoundHandler);
+
+// Error metrics collection middleware
+app.use(errorMetricsMiddleware);
+
+// Enhanced global error handling middleware - must be last
+app.use(enhancedErrorHandler);
 
 // Initialize database and start server
 async function startServer() {

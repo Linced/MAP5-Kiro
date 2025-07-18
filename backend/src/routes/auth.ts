@@ -332,4 +332,75 @@ router.post('/check-email',
   }
 );
 
+/**
+ * POST /api/auth/dev-verify
+ * Development-only endpoint to manually verify email
+ */
+router.post('/dev-verify',
+  validateRequest(Joi.object({
+    email: Joi.string().email().required()
+  })),
+  async (req, res) => {
+    // Only allow in development
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Route not found'
+        }
+      });
+    }
+
+    try {
+      const { email } = req.body;
+      
+      const success = await authService.devVerifyEmail(email);
+
+      if (success) {
+        res.json({
+          success: true,
+          message: 'Email verified successfully for development'
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'VERIFICATION_FAILED',
+            message: 'Failed to verify email'
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Dev verification error:', error);
+
+      let statusCode = 400;
+      let errorCode = 'VERIFICATION_FAILED';
+      let message = 'Failed to verify email';
+
+      if (error instanceof Error) {
+        if (error.message.includes('User not found')) {
+          statusCode = 404;
+          errorCode = 'USER_NOT_FOUND';
+          message = 'No account found with this email address';
+        } else if (error.message.includes('already verified')) {
+          statusCode = 409;
+          errorCode = 'ALREADY_VERIFIED';
+          message = 'Email is already verified';
+        } else {
+          message = error.message;
+        }
+      }
+
+      res.status(statusCode).json({
+        success: false,
+        error: {
+          code: errorCode,
+          message
+        }
+      });
+    }
+  }
+);
+
 export default router;

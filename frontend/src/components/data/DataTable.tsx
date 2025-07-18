@@ -79,7 +79,7 @@ const DataTable: React.FC<DataTableProps> = ({ uploadId }) => {
           sortBy: sorting[0]?.id,
           sortOrder: sorting[0]?.desc ? 'desc' : 'asc',
           filters: columnFilters.map(filter => ({
-            column: filter.id,
+            field: filter.id,
             operator: 'contains' as const,
             value: filter.value,
           })),

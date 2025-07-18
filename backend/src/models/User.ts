@@ -81,6 +81,20 @@ export class UserModel {
   }
 
   /**
+   * Verify user's email by user ID (development only)
+   */
+  static async verifyEmailById(userId: number): Promise<boolean> {
+    const result = await database.run(
+      `UPDATE users 
+       SET email_verified = true, verification_token = NULL, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = ?`,
+      [userId]
+    );
+
+    return (result.changes || 0) > 0;
+  }
+
+  /**
    * Verify password against hash
    */
   static async verifyPassword(password: string, hash: string): Promise<boolean> {
