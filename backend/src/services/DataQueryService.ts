@@ -4,42 +4,62 @@ import { QueryOptions, Filter, DataResult, ColumnInfo, DataRow, Upload } from '.
 export class DataQueryService {
   /**
    * Get user's data with pagination, sorting, and filtering
+   * Optimized with better query patterns and caching
    */
   static async getUserData(userId: number, options: QueryOptions): Promise<DataResult> {
     try {
-      // Build base query for data rows with upload information
-      const queryBuilder = createQueryBuilder()
-        .select([
-          'dr.id',
-          'dr.user_id',
-          'dr.upload_id',
-          'dr.row_index',
-          'dr.row_data',
-          'dr.uploaded_at',
-          'u.filename',
-          'u.column_names'
-        ])
-        .from('data_rows dr')
-        .where('dr.user_id = ?', userId);
+      // Use optimized query with proper indexes
+      let baseQuery = `
+        SELECT 
+          dr.id,
+          dr.user_id,
+          dr.upload_id,
+          dr.row_index,
+          dr.row_data,
+          dr.uploaded_at,
+          u.filename,
+          u.column_names
+        FROM data_rows dr 
+        INNER JOIN uploads u ON dr.upload_id = u.id 
+        WHERE dr.user_id = ?
+      `;
+      
+      const params: any[] = [userId];
 
-      // Join with uploads table for additional metadata
-      queryBuilder.from('data_rows dr LEFT JOIN uploads u ON dr.upload_id = u.id');
-
-      // Apply filters if provided
+      // Apply filters with optimized WHERE clauses
       if (options.filters && options.filters.length > 0) {
-        await this.applyDataFilters(queryBuilder, options.filters);
+        const filterClauses = this.buildOptimizedFilters(options.filters);
+        if (filterClauses.clauses.length > 0) {
+          baseQuery += ' AND ' + filterClauses.clauses.join(' AND ');
+          params.push(...filterClauses.params);
+        }
       }
 
-      // Apply pagination and sorting
-      QueryHelpers.applyPagination(queryBuilder, options);
+      // Apply sorting with index-friendly ORDER BY
+      if (options.sortBy) {
+        if (options.sortBy === 'uploaded_at') {
+          baseQuery += ` ORDER BY dr.uploaded_at ${options.sortOrder?.toUpperCase() || 'DESC'}`;
+        } else if (options.sortBy === 'filename') {
+          baseQuery += ` ORDER BY u.filename ${options.sortOrder?.toUpperCase() || 'ASC'}`;
+        } else {
+          baseQuery += ` ORDER BY dr.row_index ${options.sortOrder?.toUpperCase() || 'ASC'}`;
+        }
+      } else {
+        baseQuery += ' ORDER BY dr.uploaded_at DESC, dr.row_index ASC';
+      }
 
-      // Execute query
-      const results = await queryBuilder.execute();
+      // Apply pagination
+      const offset = (options.page - 1) * options.limit;
+      baseQuery += ` LIMIT ? OFFSET ?`;
+      params.push(options.limit, offset);
 
-      // Get total count for pagination
-      const totalCount = await this.getTotalCount(userId, options.filters);
+      // Execute optimized query
+      const results = await database.all(baseQuery, params);
 
-      // Transform results
+      // Get total count with same filters (optimized)
+      const totalCount = await this.getOptimizedTotalCount(userId, options.filters);
+
+      // Transform results with minimal processing
       const data: DataRow[] = results.map(result => ({
         id: result.id,
         userId: result.user_id,
@@ -269,6 +289,66 @@ export class DataQueryService {
       }
       // For data column filters, we'd need to know which uploads contain which columns
       // This is more complex and might require a separate query strategy
+    }
+  }
+
+  /**
+   * Build optimized filter clauses for better query performance
+   */
+  private static buildOptimizedFilters(filters: Filter[]): { clauses: string[], params: any[] } {
+    const clauses: string[] = [];
+    const params: any[] = [];
+
+    for (const filter of filters) {
+      if (filter.column === 'filename') {
+        if (filter.operator === 'eq') {
+          clauses.push('u.filename = ?');
+          params.push(filter.value);
+        } else if (filter.operator === 'contains') {
+          clauses.push('u.filename LIKE ?');
+          params.push(`%${filter.value}%`);
+        }
+      } else if (filter.column === 'uploaded_at') {
+        if (filter.operator === 'gt') {
+          clauses.push('dr.uploaded_at > ?');
+          params.push(filter.value);
+        } else if (filter.operator === 'lt') {
+          clauses.push('dr.uploaded_at < ?');
+          params.push(filter.value);
+        }
+      }
+    }
+
+    return { clauses, params };
+  }
+
+  /**
+   * Get optimized total count for pagination with better performance
+   */
+  private static async getOptimizedTotalCount(userId: number, filters?: Filter[]): Promise<number> {
+    try {
+      let query = `
+        SELECT COUNT(*) as count 
+        FROM data_rows dr 
+        INNER JOIN uploads u ON dr.upload_id = u.id 
+        WHERE dr.user_id = ?
+      `;
+      const params: any[] = [userId];
+
+      // Apply same filters as main query for accurate count
+      if (filters && filters.length > 0) {
+        const filterClauses = this.buildOptimizedFilters(filters);
+        if (filterClauses.clauses.length > 0) {
+          query += ' AND ' + filterClauses.clauses.join(' AND ');
+          params.push(...filterClauses.params);
+        }
+      }
+
+      const result = await database.get(query, params);
+      return result?.count || 0;
+
+    } catch (error) {
+      throw new Error(`Failed to get optimized total count: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

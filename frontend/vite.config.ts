@@ -3,8 +3,13 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    react({
+      // Optimize JSX runtime
+      jsxRuntime: 'automatic'
+    })
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -24,13 +29,78 @@ export default defineConfig({
       },
     },
   },
+  // Optimize dependencies
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@tanstack/react-table',
+      'axios'
+    ],
+    exclude: [
+      'chart.js',
+      'react-chartjs-2'
+    ]
+  },
   build: {
     outDir: 'dist',
     sourcemap: true,
+    // Bundle optimization
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate vendor chunks for better caching
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'table-vendor': ['@tanstack/react-table'],
+          'chart-vendor': ['chart.js', 'react-chartjs-2'],
+          'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'utils': ['axios']
+        },
+        // Optimize chunk file names for caching
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
+          return `js/${facadeModuleId}-[hash].js`;
+        },
+        entryFileNames: 'js/[name]-[hash].js',
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name.split('.');
+          const ext = info[info.length - 1];
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
+            return `images/[name]-[hash][extname]`;
+          }
+          if (/css/i.test(ext)) {
+            return `css/[name]-[hash][extname]`;
+          }
+          return `assets/[name]-[hash][extname]`;
+        }
+      }
+    },
+    // Minification and tree shaking
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.log in production
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn']
+      },
+      mangle: {
+        safari10: true
+      }
+    },
+    // Chunk size warnings
+    chunkSizeWarningLimit: 1000,
+    // Enable tree shaking
+    target: 'esnext',
+    // Optimize dependencies
+    commonjsOptions: {
+      include: [/node_modules/]
+    }
   },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: './src/test/setup.ts',
-  },
-});
+  define: {
+    // Define environment variables for production
+    __API_URL__: mode === 'production' 
+      ? JSON.stringify(process.env.VITE_API_URL || 'https://trade-insight-backend.onrender.com')
+      : JSON.stringify('http://localhost:3001')
+  }
+}));

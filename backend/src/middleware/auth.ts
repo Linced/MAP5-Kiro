@@ -203,5 +203,6 @@ class RateLimiter {
 }
 
 // Export rate limiter instances
-export const authRateLimit = new RateLimiter(10, 15 * 60 * 1000); // 10 requests per 15 minutes for auth endpoints
-export const generalRateLimit = new RateLimiter(100, 15 * 60 * 1000); // 100 requests per 15 minutes for general endpoints
+// Increased limits for development - 100 requests per 15 minutes for auth endpoints
+export const authRateLimit = new RateLimiter(100, 15 * 60 * 1000); 
+export const generalRateLimit = new RateLimiter(1000, 15 * 60 * 1000); // 1000 requests per 15 minutes for general endpoints

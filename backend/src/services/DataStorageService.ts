@@ -1,10 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 import { database, QueryHelpers } from '../database';
 import { ParsedData, StorageResult, Upload, DataRow } from '../types';
+import { MemoryManager, CSVMemoryManager } from '../utils/memoryManager';
 
 export class DataStorageService {
   /**
-   * Store parsed CSV data in the database
+   * Store parsed CSV data in the database with memory management
    */
   static async storeData(
     userId: number, 
@@ -12,48 +13,68 @@ export class DataStorageService {
     parsedData: ParsedData
   ): Promise<StorageResult> {
     const uploadId = uuidv4();
+    const memoryManager = MemoryManager.getInstance();
+    const csvMemoryManager = new CSVMemoryManager();
     
-    try {
-      // Begin transaction for data consistency
-      await database.run('BEGIN TRANSACTION');
-      
-      // Create upload metadata record
-      const uploadRecord = {
-        id: uploadId,
-        user_id: userId,
-        filename: filename,
-        row_count: parsedData.rows.length,
-        column_names: JSON.stringify(parsedData.headers)
-      };
-      
-      await QueryHelpers.insert('uploads', uploadRecord);
-      
-      // Prepare data rows for batch insert
-      const dataRows = parsedData.rows.map((row, index) => ({
-        user_id: userId,
-        upload_id: uploadId,
-        row_index: index,
-        row_data: JSON.stringify(row)
-      }));
-      
-      // Batch insert data rows for better performance
-      if (dataRows.length > 0) {
-        await QueryHelpers.batchInsert('data_rows', dataRows);
-      }
-      
-      // Commit transaction
-      await database.run('COMMIT');
-      
-      return {
-        uploadId,
-        rowCount: parsedData.rows.length
-      };
-      
-    } catch (error) {
-      // Rollback transaction on error
-      await database.run('ROLLBACK');
-      throw new Error(`Failed to store CSV data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    // Validate CSV size before processing
+    const sizeValidation = csvMemoryManager.validateCSVSize(parsedData.rows);
+    if (!sizeValidation.canProcess) {
+      throw new Error(`Cannot process CSV: ${sizeValidation.reason}`);
     }
+    
+    return memoryManager.monitorMemoryDuring(async () => {
+      try {
+        // Begin transaction for data consistency
+        await database.run('BEGIN TRANSACTION');
+        
+        // Create upload metadata record
+        const uploadRecord = {
+          id: uploadId,
+          user_id: userId,
+          filename: filename,
+          row_count: parsedData.rows.length,
+          column_names: JSON.stringify(parsedData.headers)
+        };
+        
+        await QueryHelpers.insert('uploads', uploadRecord);
+        
+        // Process data in memory-efficient chunks
+        await csvMemoryManager.processCSVInChunks(
+          parsedData.rows,
+          async (chunk) => {
+            // Prepare chunk for batch insert
+            const dataRows = chunk.map((row, index) => ({
+              user_id: userId,
+              upload_id: uploadId,
+              row_index: parsedData.rows.indexOf(row), // Get original index
+              row_data: JSON.stringify(row)
+            }));
+            
+            // Batch insert chunk
+            if (dataRows.length > 0) {
+              await QueryHelpers.batchInsert('data_rows', dataRows);
+            }
+            
+            // Force garbage collection after each chunk
+            memoryManager.forceGarbageCollection();
+          },
+          100 // Process in chunks of 100 rows
+        );
+        
+        // Commit transaction
+        await database.run('COMMIT');
+        
+        return {
+          uploadId,
+          rowCount: parsedData.rows.length
+        };
+        
+      } catch (error) {
+        // Rollback transaction on error
+        await database.run('ROLLBACK');
+        throw new Error(`Failed to store CSV data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }, `CSV data storage for ${filename}`);
   }
   
   /**

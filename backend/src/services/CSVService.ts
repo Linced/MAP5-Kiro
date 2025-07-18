@@ -1,58 +1,86 @@
 import csvParser from 'csv-parser';
 import { Readable } from 'stream';
 import { ParsedData, ValidationResult } from '../types';
+import { MemoryManager, CSVMemoryManager } from '../utils/memoryManager';
 
 export class CSVService {
   /**
-   * Parse CSV file buffer into structured data
+   * Parse CSV file buffer into structured data with memory management
    */
   static async parseFile(fileBuffer: Buffer): Promise<ParsedData> {
-    return new Promise((resolve, reject) => {
-      const rows: Record<string, any>[] = [];
-      let headers: string[] = [];
-      let isFirstRow = true;
-      
-      const stream = Readable.from(fileBuffer.toString('utf8'));
-      
-      stream
-        .pipe(csvParser())
-        .on('headers', (headerList: string[]) => {
-          headers = headerList.map(header => header.trim());
-        })
-        .on('data', (row: Record<string, any>) => {
-          if (isFirstRow) {
-            // Ensure we have headers
-            if (headers.length === 0) {
-              headers = Object.keys(row).map(key => key.trim());
-            }
-            isFirstRow = false;
-          }
-          
-          // Clean up row data - trim string values and handle empty values
-          const cleanedRow: Record<string, any> = {};
-          for (const [key, value] of Object.entries(row)) {
-            const cleanKey = key.trim();
-            if (typeof value === 'string') {
-              const trimmedValue = value.trim();
-              // Convert empty strings to null for better data handling
-              cleanedRow[cleanKey] = trimmedValue === '' ? null : trimmedValue;
-            } else {
-              cleanedRow[cleanKey] = value;
-            }
-          }
-          
-          rows.push(cleanedRow);
-        })
-        .on('end', () => {
-          resolve({
-            headers,
-            rows
-          });
-        })
-        .on('error', (error) => {
-          reject(new Error(`CSV parsing failed: ${error.message}`));
+    const memoryManager = MemoryManager.getInstance();
+    const operationId = `csv-parse-${Date.now()}`;
+    
+    // Monitor memory during parsing
+    return memoryManager.monitorMemoryDuring(async () => {
+      return new Promise<ParsedData>((resolve, reject) => {
+        const rows: Record<string, any>[] = [];
+        let headers: string[] = [];
+        let isFirstRow = true;
+        let rowCount = 0;
+        
+        // Add to processing queue for tracking
+        memoryManager.addToProcessingQueue(operationId, {
+          type: 'csv_parsing',
+          fileSize: fileBuffer.length,
+          startTime: Date.now()
         });
-    });
+        
+        const stream = Readable.from(fileBuffer.toString('utf8'));
+        
+        stream
+          .pipe(csvParser())
+          .on('headers', (headerList: string[]) => {
+            headers = headerList.map(header => header.trim());
+          })
+          .on('data', (row: Record<string, any>) => {
+            // Check memory usage periodically
+            if (rowCount % 100 === 0 && !memoryManager.isMemoryWithinLimits()) {
+              memoryManager.forceGarbageCollection();
+              
+              if (!memoryManager.isMemoryWithinLimits()) {
+                reject(new Error('Memory limit exceeded during CSV parsing'));
+                return;
+              }
+            }
+            
+            if (isFirstRow) {
+              // Ensure we have headers
+              if (headers.length === 0) {
+                headers = Object.keys(row).map(key => key.trim());
+              }
+              isFirstRow = false;
+            }
+            
+            // Clean up row data - trim string values and handle empty values
+            const cleanedRow: Record<string, any> = {};
+            for (const [key, value] of Object.entries(row)) {
+              const cleanKey = key.trim();
+              if (typeof value === 'string') {
+                const trimmedValue = value.trim();
+                // Convert empty strings to null for better data handling
+                cleanedRow[cleanKey] = trimmedValue === '' ? null : trimmedValue;
+              } else {
+                cleanedRow[cleanKey] = value;
+              }
+            }
+            
+            rows.push(cleanedRow);
+            rowCount++;
+          })
+          .on('end', () => {
+            memoryManager.removeFromProcessingQueue(operationId);
+            resolve({
+              headers,
+              rows
+            });
+          })
+          .on('error', (error) => {
+            memoryManager.removeFromProcessingQueue(operationId);
+            reject(new Error(`CSV parsing failed: ${error.message}`));
+          });
+      });
+    }, 'CSV file parsing');
   }
   
   /**

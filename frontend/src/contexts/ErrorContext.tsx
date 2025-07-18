@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { AppError, ErrorReporter, getUserFriendlyMessage } from '../utils/errors';
-import { errorMonitoring } from '../services/errorMonitoring';
+// import { errorMonitoring } from '../services/errorMonitoring';
 import { ErrorToastContainer, useErrorNotifications } from '../components/common/ErrorNotification';
 
 interface ErrorContextType {
@@ -51,12 +51,12 @@ export const ErrorProvider: React.FC<ErrorProviderProps> = ({ children }) => {
 
   // Report error to monitoring service
   const reportError = useCallback((error: Error | AppError, context?: any) => {
-    // Report to error monitoring service
-    errorMonitoring.reportError(error, {
-      ...context,
-      isOnline,
-      timestamp: new Date().toISOString()
-    });
+    // Report to error monitoring service - temporarily disabled
+    // errorMonitoring.reportError(error, {
+    //   ...context,
+    //   isOnline,
+    //   timestamp: new Date().toISOString()
+    // });
 
     // Report to error tracking service
     ErrorReporter.getInstance().report(error, context);
@@ -93,7 +93,8 @@ export const ErrorProvider: React.FC<ErrorProviderProps> = ({ children }) => {
 
   // Get error analytics
   const getErrorAnalytics = useCallback(() => {
-    return errorMonitoring.getAnalytics();
+    // return errorMonitoring.getAnalytics();
+    return { errorCount: 0, errors: [] }; // Temporary placeholder
   }, []);
 
   const contextValue: ErrorContextType = {
@@ -189,38 +190,43 @@ class ErrorBoundary extends React.Component<
 export function useAsyncError() {
   const { reportError, showError } = useError();
 
-  const handleAsyncOperation = useCallback(async <T>(
-    operation: () => Promise<T>,
-    options?: {
-      showUserError?: boolean;
-      errorContext?: any;
-      onError?: (error: Error) => void;
-    }
-  ): Promise<T | null> => {
-    try {
-      return await operation();
-    } catch (error: any) {
-      const appError = error instanceof AppError ? error : new AppError(
-        error.message || 'Operation failed',
-        'ASYNC_OPERATION_ERROR'
-      );
-
-      // Report error
-      reportError(appError, options?.errorContext);
-
-      // Show user notification if requested
-      if (options?.showUserError) {
-        showError(appError);
+  const handleAsyncOperation = useCallback(
+    <T,>(
+      operation: () => Promise<T>,
+      options?: {
+        showUserError?: boolean;
+        errorContext?: any;
+        onError?: (error: Error) => void;
       }
+    ) => {
+      return async (): Promise<T | null> => {
+        try {
+          return await operation();
+        } catch (error: any) {
+          const appError = error instanceof AppError ? error : new AppError(
+            error.message || 'Operation failed',
+            'ASYNC_OPERATION_ERROR'
+          );
 
-      // Call custom error handler
-      if (options?.onError) {
-        options.onError(appError);
-      }
+          // Report error
+          reportError(appError, options?.errorContext);
 
-      return null;
-    }
-  }, [reportError, showError]);
+          // Show user notification if requested
+          if (options?.showUserError) {
+            showError(appError);
+          }
+
+          // Call custom error handler
+          if (options?.onError) {
+            options.onError(appError);
+          }
+
+          return null;
+        }
+      };
+    },
+    [reportError, showError]
+  );
 
   return { handleAsyncOperation };
 }

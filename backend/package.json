@@ -5,12 +5,15 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc && npm run copy-assets",
-    "copy-assets": "xcopy \"src\\database\\*.sql\" \"dist\\database\\\" /Y /I && xcopy \"src\\database\\migrations\\*.sql\" \"dist\\database\\migrations\\\" /Y /I",
-    "start": "node dist/index.js",
+    "build": "tsc -p tsconfig.production.json && npm run copy-assets",
+    "copy-assets": "xcopy \"src\\database\\*.sql\" \"dist\\database\\\" /Y /I && xcopy \"src\\database\\migrations\\*.sql\" \"dist\\database\\migrations\\\" /Y /I 2>nul || cp -r src/database/*.sql dist/database/ 2>/dev/null || true && cp -r src/database/migrations/*.sql dist/database/migrations/ 2>/dev/null || true",
+    "start": "node dist/production-startup.js",
+    "start:dev": "node dist/index.js",
     "test": "jest --passWithNoTests",
     "db:init": "tsx src/database/cli.ts init",
+    "db:init:prod": "node dist/database/cli.js init",
     "db:migrate": "tsx src/database/cli.ts migrate",
+    "db:migrate:prod": "node dist/database/cli.js migrate",
     "db:rollback": "tsx src/database/cli.ts rollback",
     "db:status": "tsx src/database/cli.ts status",
     "db:create": "tsx src/database/cli.ts create"

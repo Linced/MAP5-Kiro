@@ -195,7 +195,7 @@ export function globalErrorHandler(
   const isProduction = process.env.NODE_ENV === 'production';
   const isAppError = error instanceof AppError;
   
-  if (isProduction && (!isAppError || !isAppError.isOperational)) {
+  if (isProduction && (!isAppError || (error instanceof AppError && !error.isOperational))) {
     const genericError = new AppError(
       'Something went wrong. Please try again later.',
       500,

@@ -16,7 +16,8 @@ import {
   UpdateTagRequest
 } from '../types';
 import { withRetry, API_RETRY_CONFIG, FILE_UPLOAD_RETRY_CONFIG } from '../utils/retry';
-import { ErrorReporter, AppError, ErrorCodes } from '../utils/errors';
+import { ErrorReporter, ErrorCodes } from '../utils/errors';
+import { dataCache, uploadCache, calculationCache, chartCache, CacheService } from './cacheService';
 
 class ApiService {
   private api: AxiosInstance;
@@ -149,7 +150,7 @@ class ApiService {
 
   async getCurrentUser(): Promise<ApiResponse<User>> {
     try {
-      const response: AxiosResponse<ApiResponse<User>> = await this.api.get('/api/auth/me');
+      const response: AxiosResponse<ApiResponse<User>> = await this.api.get('/api/auth/profile');
       return response.data;
     } catch (error: any) {
       return {
@@ -214,12 +215,24 @@ class ApiService {
   }
 
   async getUploads(): Promise<ApiResponse<Upload[]>> {
+    const cacheKey = 'uploads';
+    
+    // Try to get from cache first
+    const cachedData = uploadCache.get<ApiResponse<Upload[]>>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+
     try {
       const response: AxiosResponse<ApiResponse<{ uploads: Upload[] }>> = await this.api.get('/api/data/uploads');
-      return {
+      const result = {
         success: true,
         data: response.data.success ? response.data.data.uploads : []
       };
+      
+      // Cache the successful result
+      uploadCache.set(cacheKey, result);
+      return result;
     } catch (error: any) {
       return {
         success: false,
@@ -250,6 +263,15 @@ class ApiService {
 
   // Data retrieval methods
   async getData(uploadId: string, options: QueryOptions): Promise<ApiResponse<{ rows: any[]; pagination: any }>> {
+    // Create cache key from parameters
+    const cacheKey = CacheService.createKey('data', { uploadId, ...options });
+    
+    // Try to get from cache first
+    const cachedData = dataCache.get<ApiResponse<{ rows: any[]; pagination: any }>>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+
     try {
       const params = new URLSearchParams({
         page: options.page.toString(),
@@ -267,6 +289,11 @@ class ApiService {
 
       const response: AxiosResponse<ApiResponse<{ rows: any[]; pagination: any }>> = 
         await this.api.get(`/api/data/upload/${uploadId}?${params.toString()}`);
+      
+      // Cache successful result
+      if (response.data.success) {
+        dataCache.set(cacheKey, response.data);
+      }
       
       return response.data;
     } catch (error: any) {

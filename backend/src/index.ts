@@ -3,7 +3,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { initializeDatabase, closeDatabase } from './database';
-import { logger } from './utils/logger';
 
 // Load environment variables
 dotenv.config();
@@ -11,15 +10,177 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(helmet());
-app.use(cors());
+// Production security configuration
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'", isProduction ? "https://trade-insight-frontend.vercel.app" : "http://localhost:3000"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
+// CORS configuration
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    const allowedOrigins = [
+      'http://localhost:3000', // Development frontend
+      'https://trade-insight-frontend.vercel.app', // Production frontend
+      process.env.FRONTEND_URL // Environment-specific frontend URL
+    ].filter(Boolean);
+
+    // Allow requests with no origin (mobile apps, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['X-Total-Count', 'X-Page-Count']
+};
+
+app.use(cors(corsOptions));
+
+// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Static asset caching middleware
+app.use('/static', express.static('public', {
+  maxAge: '1y', // Cache static assets for 1 year
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, path) => {
+    // Set different cache policies based on file type
+    if (path.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    } else if (path.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day for other files
+    }
+  }
+}));
+
+// API response caching headers
+app.use('/api', (req, res, next) => {
+  // Set cache headers for API responses
+  if (req.method === 'GET') {
+    // Cache GET requests for a short time
+    res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes
+    res.setHeader('ETag', `"${Date.now()}"`);
+  } else {
+    // Don't cache non-GET requests
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  }
+  next();
+});
+
 // Health check endpoint
-app.get('/health', (_req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+app.get('/health', async (_req, res) => {
+  try {
+    // Basic health check
+    const health: any = {
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+      version: process.env.npm_package_version || '1.0.0'
+    };
+
+    // Check database connectivity
+    try {
+      const { database } = require('./database');
+      await database.all('SELECT 1');
+      health.database = 'connected';
+    } catch (error) {
+      health.database = 'disconnected';
+      health.status = 'DEGRADED';
+    }
+
+    // Check email service if configured
+    try {
+      const { productionEmailService } = require('./services/productionEmailService');
+      if (productionEmailService.isReady()) {
+        health.email = 'configured';
+      } else {
+        health.email = 'not_configured';
+      }
+    } catch (error) {
+      health.email = 'error';
+    }
+
+    res.status(health.status === 'OK' ? 200 : 503).json(health);
+  } catch (error) {
+    res.status(503).json({
+      status: 'ERROR',
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Readiness probe for Kubernetes/container orchestration
+app.get('/ready', async (_req, res) => {
+  try {
+    // Check if all critical services are ready
+    const { database } = require('./database');
+    await database.all('SELECT 1');
+    
+    res.json({ 
+      status: 'READY', 
+      timestamp: new Date().toISOString() 
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'NOT_READY',
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Performance monitoring endpoint
+app.get('/api/performance', (_req, res) => {
+  try {
+    const { PerformanceMonitor } = require('./utils/performanceMonitor');
+    const { MemoryManager } = require('./utils/memoryManager');
+    
+    const performanceMonitor = PerformanceMonitor.getInstance();
+    const memoryManager = MemoryManager.getInstance();
+    
+    const report = {
+      ...performanceMonitor.getPerformanceReport(),
+      memoryUsage: memoryManager.getMemoryUsage(),
+      processingQueue: memoryManager.getProcessingQueueStatus(),
+      timestamp: new Date().toISOString()
+    };
+    
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Failed to generate performance report',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // Import routes

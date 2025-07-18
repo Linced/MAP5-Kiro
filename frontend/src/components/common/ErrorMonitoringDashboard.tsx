@@ -248,7 +248,7 @@ export const ErrorMonitoringDashboard: React.FC<ErrorMonitoringDashboardProps> =
                     <div className="space-y-1">
                       {session.actions.slice(-5).map((action: any, index: number) => (
                         <div key={index} className="text-xs text-gray-600">
-                          {action.type} - {new Date(action.timestamp).toLocaleTimeString()}
+                          {typeof action.type === 'string' ? action.type : JSON.stringify(action.type)} - {new Date(action.timestamp).toLocaleTimeString()}
                         </div>
                       ))}
                     </div>

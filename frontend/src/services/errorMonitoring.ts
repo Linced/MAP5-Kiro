@@ -287,7 +287,6 @@ export class ErrorMonitoringService {
   private reportPerformanceIssue(type: string, details: any): void {
     const performanceError = new AppError(
       `Performance Issue: ${type}`,
-      500,
       'PERFORMANCE_ISSUE',
       details,
       ErrorSeverity.MEDIUM
