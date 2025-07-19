@@ -12,14 +12,24 @@ async function productionStartup() {
   console.log('Starting production initialization...');
   
   try {
-    // 0. Run production readiness checks
+    // 0. Run production readiness checks (non-blocking for database)
     console.log('Running production readiness checks...');
     const checkResult = await ProductionChecker.runChecks();
     ProductionChecker.logResults(checkResult);
     
-    if (!checkResult.isReady) {
-      console.error('Production readiness checks failed. Please fix the issues above before deploying.');
+    // Check for critical failures (excluding database which we'll initialize)
+    const criticalFailures = Object.entries(checkResult.checks)
+      .filter(([key, check]) => check.status === 'fail' && key !== 'database')
+      .map(([key]) => key);
+    
+    if (criticalFailures.length > 0) {
+      console.error(`Critical production readiness checks failed: ${criticalFailures.join(', ')}`);
+      console.error('Please fix the issues above before deploying.');
       process.exit(1);
+    }
+    
+    if (checkResult.checks.database?.status === 'fail') {
+      console.log('Database not connected yet - will initialize during startup...');
     }
     
     // 1. Initialize database
