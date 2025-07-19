@@ -37,7 +37,10 @@ app.use(helmet({
 const corsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     const allowedOrigins = [
-      'http://localhost:3000', // Development frontend
+      'http://localhost:3000', // Development frontend (CRA)
+      'http://localhost:5173', // Development frontend (Vite)
+      'http://127.0.0.1:5173', // Alternative localhost
+      'http://127.0.0.1:3000', // Alternative localhost
       'https://trade-insight-frontend.vercel.app', // Production frontend
       process.env.FRONTEND_URL // Environment-specific frontend URL
     ].filter(Boolean);
@@ -48,6 +51,7 @@ const corsOptions = {
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log(`CORS blocked origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -195,6 +199,20 @@ app.use('/api/charts', chartRoutes);
 app.use('/api/strategies', strategyRoutes);
 app.use('/api/buckets', bucketRoutes);
 app.use('/api/tags', tagRoutes);
+
+// Root route
+app.get('/', (_req, res) => {
+  res.json({ 
+    message: 'TradeInsight API Server',
+    version: process.env.npm_package_version || '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/health',
+      api: '/api',
+      ready: '/ready'
+    }
+  });
+});
 
 // Placeholder for API routes
 app.get('/api', (_req, res) => {

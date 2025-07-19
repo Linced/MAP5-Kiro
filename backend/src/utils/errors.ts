@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 
-// Error codes enum for consistency
+// Error codes enum for backend
 export enum ErrorCodes {
   // Authentication errors
   INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',

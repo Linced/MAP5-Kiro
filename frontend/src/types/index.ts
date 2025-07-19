@@ -1,6 +1,7 @@
 // Strategy types
 export interface Strategy {
   id: number;
+  userId?: string;
   name: string;
   description: string;
   isActive: boolean;
@@ -81,10 +82,13 @@ export interface Upload {
   filename: string;
   originalName: string;
   size: number;
-  mimetype: string;
+  mimetype?: string;
   uploadedAt: string;
   rowCount?: number;
   columnNames?: string[];
+  status?: string;
+  recordCount?: number;
+  columns?: string[];
 }
 
 // Query types

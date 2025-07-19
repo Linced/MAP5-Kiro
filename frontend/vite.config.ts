@@ -21,13 +21,14 @@ export default defineConfig(({ mode }) => ({
     },
   },
   server: {
-    port: 3000,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      },
-    },
+    port: 5173,
+    // Proxy disabled while using mock API
+    // proxy: {
+    //   '/api': {
+    //     target: 'http://localhost:3002',
+    //     changeOrigin: true,
+    //   },
+    // },
   },
   // Optimize dependencies
   optimizeDeps: {
@@ -101,6 +102,6 @@ export default defineConfig(({ mode }) => ({
     // Define environment variables for production
     __API_URL__: mode === 'production' 
       ? JSON.stringify(process.env.VITE_API_URL || 'https://trade-insight-backend.onrender.com')
-      : JSON.stringify('http://localhost:3001')
+      : JSON.stringify('http://localhost:3002')
   }
 }));

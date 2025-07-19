@@ -89,42 +89,49 @@ const DataPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="border-b border-gray-200 pb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Data View</h1>
-        <p className="mt-1 text-sm text-gray-600">
-          View and analyze your uploaded trading data
-        </p>
+    <div className="py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            <svg className="h-8 w-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Data Analysis
+          </h1>
+          <p className="mt-1 text-sm text-gray-500">
+            View and analyze your uploaded trading data
+          </p>
+        </div>
+
+        {/* Upload Selector */}
+        {uploads.length > 1 && (
+          <div className="bg-white shadow rounded-lg p-4 mb-6">
+            <label htmlFor="upload-select" className="block text-sm font-medium text-gray-700 mb-2">
+              Select Dataset
+            </label>
+            <select
+              id="upload-select"
+              value={selectedUpload || ''}
+              onChange={(e) => setSelectedUpload(e.target.value)}
+              className="block w-full max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            >
+              {uploads.map((upload) => (
+                <option key={upload.id} value={upload.id}>
+                  {upload.filename} ({(upload.rowCount || upload.recordCount || 0).toLocaleString()} rows) - {new Date(upload.uploadedAt).toLocaleDateString()}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Data Table */}
+        {selectedUpload && (
+          <div className="bg-white shadow rounded-lg overflow-hidden">
+            <DataTable uploadId={selectedUpload} />
+          </div>
+        )}
       </div>
-
-      {/* Upload Selector */}
-      {uploads.length > 1 && (
-        <div className="bg-white shadow rounded-lg p-4">
-          <label htmlFor="upload-select" className="block text-sm font-medium text-gray-700 mb-2">
-            Select Dataset
-          </label>
-          <select
-            id="upload-select"
-            value={selectedUpload || ''}
-            onChange={(e) => setSelectedUpload(e.target.value)}
-            className="block w-full max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          >
-            {uploads.map((upload) => (
-              <option key={upload.id} value={upload.id}>
-                {upload.filename} ({upload.rowCount.toLocaleString()} rows) - {new Date(upload.uploadedAt).toLocaleDateString()}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* Data Table */}
-      {selectedUpload && (
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <DataTable uploadId={selectedUpload} />
-        </div>
-      )}
     </div>
   );
 };

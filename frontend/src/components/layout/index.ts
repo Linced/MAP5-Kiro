@@ -1,2 +1,2 @@
-// Layout components will be implemented here
-export {};
+export { Dashboard } from './Dashboard';
+export { AppLayout } from './AppLayout';

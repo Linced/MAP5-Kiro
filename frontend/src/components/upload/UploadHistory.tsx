@@ -60,8 +60,9 @@ export const UploadHistory: React.FC<UploadHistoryProps> = ({ onRefresh }) => {
   };
 
   // Format file size
-  const formatFileSize = (rowCount: number) => {
-    return `${rowCount.toLocaleString()} rows`;
+  const formatFileSize = (upload: Upload) => {
+    const count = upload.rowCount || upload.recordCount || 0;
+    return `${count.toLocaleString()} rows`;
   };
 
   useEffect(() => {
@@ -156,7 +157,7 @@ export const UploadHistory: React.FC<UploadHistoryProps> = ({ onRefresh }) => {
                         {upload.filename}
                       </p>
                       <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span>{formatFileSize(upload.rowCount)}</span>
+                        <span>{formatFileSize(upload)}</span>
                         <span>•</span>
                         <span>{formatDate(upload.uploadedAt)}</span>
                       </div>
@@ -166,7 +167,7 @@ export const UploadHistory: React.FC<UploadHistoryProps> = ({ onRefresh }) => {
 
                 <div className="flex items-center space-x-2">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    {upload.columnNames.length} columns
+                    {(upload.columnNames || upload.columns || []).length} columns
                   </span>
                   
                   <button
@@ -192,10 +193,15 @@ export const UploadHistory: React.FC<UploadHistoryProps> = ({ onRefresh }) => {
 
               {/* Column names preview */}
               <div className="mt-2">
-                <p className="text-xs text-gray-500">
-                  Columns: {upload.columnNames.slice(0, 5).join(', ')}
-                  {upload.columnNames.length > 5 && ` and ${upload.columnNames.length - 5} more...`}
-                </p>
+                {(() => {
+                  const columns = upload.columnNames || upload.columns || [];
+                  return (
+                    <p className="text-xs text-gray-500">
+                      Columns: {columns.slice(0, 5).join(', ')}
+                      {columns.length > 5 && ` and ${columns.length - 5} more...`}
+                    </p>
+                  );
+                })()}
               </div>
             </li>
           ))}

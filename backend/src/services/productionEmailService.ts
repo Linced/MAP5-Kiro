@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { logger } from '../utils/logger';
+import { User } from '../types';
 
 export interface EmailConfig {
   host: string;
@@ -18,7 +19,7 @@ export interface EmailOptions {
   text?: string;
 }
 
-export class ProductionEmailService {
+export class EmailService {
   private transporter!: nodemailer.Transporter;
   private isConfigured: boolean = false;
 
@@ -143,6 +144,37 @@ export class ProductionEmailService {
     });
   }
 
+  /**
+   * Send email verification email (User object overload for backward compatibility)
+   */
+  async sendVerificationEmailToUser(user: User): Promise<void> {
+    if (!user.verificationToken) {
+      throw new Error('User does not have a verification token');
+    }
+    
+    const success = await this.sendVerificationEmail(user.email, user.verificationToken);
+    if (!success) {
+      throw new Error('Failed to send verification email');
+    }
+  }
+
+  /**
+   * Send password reset email (User object overload for backward compatibility)
+   */
+  async sendPasswordResetEmailToUser(user: User, resetToken: string): Promise<void> {
+    const success = await this.sendPasswordResetEmail(user.email, resetToken);
+    if (!success) {
+      throw new Error('Failed to send password reset email');
+    }
+  }
+
+  /**
+   * Test email configuration
+   */
+  async testConnection(): Promise<boolean> {
+    return this.verifyConnection();
+  }
+
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
     const frontendUrl = process.env.FRONTEND_URL || 'https://trade-insight-frontend.vercel.app';
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
@@ -201,4 +233,5 @@ export class ProductionEmailService {
 }
 
 // Export singleton instance
-export const productionEmailService = new ProductionEmailService();
+export const emailService = new EmailService();
+export const productionEmailService = emailService; // Backward compatibility

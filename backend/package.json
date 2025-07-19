@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "debug": "tsx watch src/debug-server.ts",
     "build": "tsc -p tsconfig.production.json && npm run copy-assets",
     "copy-assets": "xcopy \"src\\database\\*.sql\" \"dist\\database\\\" /Y /I && xcopy \"src\\database\\migrations\\*.sql\" \"dist\\database\\migrations\\\" /Y /I 2>nul || cp -r src/database/*.sql dist/database/ 2>/dev/null || true && cp -r src/database/migrations/*.sql dist/database/migrations/ 2>/dev/null || true",
     "start": "node dist/production-startup.js",

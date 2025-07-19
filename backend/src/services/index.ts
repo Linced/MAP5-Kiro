@@ -1,6 +1,6 @@
 // Backend services exports
 export { AuthService } from './AuthService';
-export { EmailService } from './EmailService';
+export { EmailService, emailService, productionEmailService } from './productionEmailService';
 export { CSVService } from './CSVService';
 export { DataStorageService } from './DataStorageService';
 export { UploadTrackingService } from './UploadTrackingService';

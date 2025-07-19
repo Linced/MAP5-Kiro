@@ -1,6 +1,6 @@
 // Frontend error types and utilities
 
-// Error codes enum matching backend
+// Error codes enum for frontend
 export enum ErrorCodes {
   // Authentication errors
   INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
@@ -38,6 +38,23 @@ export enum ErrorCodes {
   RENDER_ERROR = 'RENDER_ERROR'
 }
 
+// User-friendly error messages
+export const ERROR_MESSAGES: Record<string, string> = {
+  [ErrorCodes.NETWORK_ERROR]: 'Unable to connect to the server. Please check your internet connection and try again.',
+  [ErrorCodes.TIMEOUT_ERROR]: 'The request took too long to complete. Please try again.',
+  [ErrorCodes.CONNECTION_ERROR]: 'Connection lost. Please check your internet connection.',
+  [ErrorCodes.INVALID_CREDENTIALS]: 'Invalid email or password. Please check your credentials and try again.',
+  [ErrorCodes.EMAIL_NOT_VERIFIED]: 'Please verify your email address before logging in.',
+  [ErrorCodes.EMAIL_ALREADY_EXISTS]: 'An account with this email already exists.',
+  [ErrorCodes.FILE_TOO_LARGE]: 'The file is too large. Please select a file smaller than 10MB.',
+  [ErrorCodes.INVALID_FILE_TYPE]: 'Invalid file type. Please select a CSV file.',
+  [ErrorCodes.CSV_PARSE_ERROR]: 'Unable to parse the CSV file. Please check the file format and try again.',
+  [ErrorCodes.VALIDATION_ERROR]: 'Please check your input and try again.',
+  [ErrorCodes.RATE_LIMIT_EXCEEDED]: 'Too many requests. Please wait a moment and try again.',
+  [ErrorCodes.SERVICE_UNAVAILABLE]: 'The service is temporarily unavailable. Please try again later.',
+  [ErrorCodes.INTERNAL_SERVER_ERROR]: 'Something went wrong on our end. Please try again later.'
+};
+
 // Error severity levels
 export enum ErrorSeverity {
   LOW = 'low',
@@ -74,22 +91,7 @@ export class AppError extends Error {
   }
 }
 
-// User-friendly error messages
-export const ERROR_MESSAGES: Record<string, string> = {
-  [ErrorCodes.NETWORK_ERROR]: 'Unable to connect to the server. Please check your internet connection and try again.',
-  [ErrorCodes.TIMEOUT_ERROR]: 'The request took too long to complete. Please try again.',
-  [ErrorCodes.CONNECTION_ERROR]: 'Connection lost. Please check your internet connection.',
-  [ErrorCodes.INVALID_CREDENTIALS]: 'Invalid email or password. Please check your credentials and try again.',
-  [ErrorCodes.EMAIL_NOT_VERIFIED]: 'Please verify your email address before logging in.',
-  [ErrorCodes.EMAIL_ALREADY_EXISTS]: 'An account with this email already exists.',
-  [ErrorCodes.FILE_TOO_LARGE]: 'The file is too large. Please select a file smaller than 10MB.',
-  [ErrorCodes.INVALID_FILE_TYPE]: 'Invalid file type. Please select a CSV file.',
-  [ErrorCodes.CSV_PARSE_ERROR]: 'Unable to parse the CSV file. Please check the file format and try again.',
-  [ErrorCodes.VALIDATION_ERROR]: 'Please check your input and try again.',
-  [ErrorCodes.RATE_LIMIT_EXCEEDED]: 'Too many requests. Please wait a moment and try again.',
-  [ErrorCodes.SERVICE_UNAVAILABLE]: 'The service is temporarily unavailable. Please try again later.',
-  [ErrorCodes.INTERNAL_SERVER_ERROR]: 'Something went wrong on our end. Please try again later.'
-};
+// ERROR_MESSAGES is already exported above
 
 // Get user-friendly error message
 export function getUserFriendlyMessage(error: any): string {

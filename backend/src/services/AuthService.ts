@@ -1,7 +1,7 @@
 import { User, AuthResult, AuthService as IAuthService } from '../types';
 import { UserModel } from '../models/User';
 import { JWTUtils } from '../utils/jwt';
-import { EmailService } from './EmailService';
+import { emailService } from './productionEmailService';
 import Joi from 'joi';
 
 export class AuthService implements IAuthService {
@@ -35,7 +35,7 @@ export class AuthService implements IAuthService {
 
     // Send verification email
     try {
-      await EmailService.sendVerificationEmail(user);
+      await emailService.sendVerificationEmailToUser(user);
     } catch (error) {
       console.error('Failed to send verification email:', error);
       // Don't fail registration if email fails, but log the error
@@ -179,7 +179,7 @@ export class AuthService implements IAuthService {
     }
 
     // Send verification email
-    await EmailService.sendVerificationEmail(user);
+    await emailService.sendVerificationEmailToUser(user);
   }
 
   /**

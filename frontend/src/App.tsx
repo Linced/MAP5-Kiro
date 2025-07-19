@@ -2,9 +2,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Suspense, lazy } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { ErrorProvider } from './contexts/ErrorContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { LoginForm, RegisterForm, ProtectedRoute, EmailVerification } from './components/auth';
 import { Dashboard } from './components/layout/Dashboard';
+import { AppLayout } from './components/layout/AppLayout';
 import { UploadPage } from './components/upload';
+import { TableSummaryPage } from './components/table-summary';
+import { TagsPage } from './components/tags';
+import { SettingsPage } from './components/settings';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ErrorMonitoringToggle } from './components/common/ErrorMonitoringDashboard';
 import { ErrorReporter } from './utils/errors';
@@ -25,9 +30,10 @@ function App() {
 
   return (
     <ErrorBoundary onError={handleGlobalError}>
-      <ErrorProvider>
-        <AuthProvider>
-          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <ThemeProvider>
+        <ErrorProvider>
+          <AuthProvider>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Routes>
               <Route path="/login" element={<LoginForm />} />
               <Route path="/register" element={<RegisterForm />} />
@@ -36,7 +42,9 @@ function App() {
                 path="/dashboard" 
                 element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <AppLayout>
+                      <Dashboard />
+                    </AppLayout>
                   </ProtectedRoute>
                 } 
               />
@@ -44,7 +52,19 @@ function App() {
                 path="/upload" 
                 element={
                   <ProtectedRoute>
-                    <UploadPage />
+                    <AppLayout>
+                      <UploadPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/table-summary" 
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TableSummaryPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 } 
               />
@@ -52,9 +72,11 @@ function App() {
                 path="/data" 
                 element={
                   <ProtectedRoute>
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <DataPage />
-                    </Suspense>
+                    <AppLayout>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <DataPage />
+                      </Suspense>
+                    </AppLayout>
                   </ProtectedRoute>
                 } 
               />
@@ -62,9 +84,31 @@ function App() {
                 path="/strategies" 
                 element={
                   <ProtectedRoute>
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <StrategyPage />
-                    </Suspense>
+                    <AppLayout>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <StrategyPage />
+                      </Suspense>
+                    </AppLayout>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/tags" 
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TagsPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/settings" 
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <SettingsPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 } 
               />
@@ -76,6 +120,7 @@ function App() {
           </Router>
         </AuthProvider>
       </ErrorProvider>
+    </ThemeProvider>
     </ErrorBoundary>
   );
 }

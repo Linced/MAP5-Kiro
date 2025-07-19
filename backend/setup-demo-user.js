@@ -1,93 +1,101 @@
-#!/usr/bin/env node
-
 const bcrypt = require('bcrypt');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-/**
- * Script to create a demo user for testing purposes
- */
 async function createDemoUser() {
-  const dbPath = process.env.DATABASE_PATH || './data/tradeinsight.db';
+  const dbPath = path.join(__dirname, 'data', 'tradeinsight.db');
   
-  console.log('Setting up demo user...');
-  console.log('Database path:', dbPath);
-  
-  const db = new sqlite3.Database(dbPath);
-  
+  console.log('🔧 Setting up demo and test users...');
+  console.log('📁 Database path:', dbPath);
+
+  const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+      console.error('❌ Error opening database:', err.message);
+      return;
+    }
+    console.log('✅ Connected to SQLite database');
+  });
+
   try {
-    // Demo user credentials
-    const demoEmail = 'demo@tradeinsight.com';
-    const demoPassword = 'demo123456';
-    const hashedPassword = await bcrypt.hash(demoPassword, 12);
-    
-    // Check if demo user already exists
-    const existingUser = await new Promise((resolve, reject) => {
-      db.get('SELECT id FROM users WHERE email = ?', [demoEmail], (err, row) => {
+    // Create users table if it doesn't exist (using correct schema)
+    await new Promise((resolve, reject) => {
+      db.run(`
+        CREATE TABLE IF NOT EXISTS users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          email TEXT UNIQUE NOT NULL,
+          password_hash TEXT NOT NULL,
+          email_verified BOOLEAN DEFAULT FALSE,
+          verification_token TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `, (err) => {
         if (err) reject(err);
-        else resolve(row);
+        else resolve();
       });
     });
-    
-    if (existingUser) {
-      console.log('Demo user already exists, updating password...');
-      
-      // Update existing demo user
-      await new Promise((resolve, reject) => {
-        db.run(
-          'UPDATE users SET password_hash = ?, email_verified = 1, updated_at = CURRENT_TIMESTAMP WHERE email = ?',
-          [hashedPassword, demoEmail],
-          function(err) {
-            if (err) reject(err);
-            else resolve(this);
-          }
-        );
+
+    console.log('✅ Users table ready');
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash('demo123456', 10);
+    console.log('🔐 Password hashed');
+
+    // Insert or update demo user
+    await new Promise((resolve, reject) => {
+      db.run(`
+        INSERT OR REPLACE INTO users (email, password_hash, email_verified)
+        VALUES (?, ?, 1)
+      `, ['demo@tradeinsight.com', hashedPassword], function(err) {
+        if (err) reject(err);
+        else {
+          console.log('✅ Demo user created/updated');
+          console.log('📧 Email: demo@tradeinsight.com');
+          console.log('🔑 Password: demo123456');
+          resolve();
+        }
       });
-      
-      console.log('Demo user password updated successfully');
-    } else {
-      console.log('Creating new demo user...');
-      
-      // Create new demo user
-      await new Promise((resolve, reject) => {
-        db.run(
-          `INSERT INTO users (email, password_hash, email_verified, created_at, updated_at) 
-           VALUES (?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-          [demoEmail, hashedPassword],
-          function(err) {
-            if (err) reject(err);
-            else resolve(this);
-          }
-        );
+    });
+
+    // Insert or update test user
+    await new Promise((resolve, reject) => {
+      db.run(`
+        INSERT OR REPLACE INTO users (email, password_hash, email_verified)
+        VALUES (?, ?, 1)
+      `, ['test@tradeinsight.com', hashedPassword], function(err) {
+        if (err) reject(err);
+        else {
+          console.log('✅ Test user created/updated');
+          console.log('📧 Email: test@tradeinsight.com');
+          console.log('🔑 Password: demo123456');
+          resolve();
+        }
       });
-      
-      console.log('Demo user created successfully');
-    }
-    
-    console.log('Demo account details:');
-    console.log('Email:', demoEmail);
-    console.log('Password:', demoPassword);
-    console.log('Status: Email verified, ready to use');
-    
+    });
+
+    // Verify the users were created
+    await new Promise((resolve, reject) => {
+      db.all('SELECT id, email, email_verified FROM users WHERE email IN (?, ?)', 
+        ['demo@tradeinsight.com', 'test@tradeinsight.com'], (err, rows) => {
+        if (err) reject(err);
+        else {
+          console.log('✅ Users verified:', rows);
+          resolve();
+        }
+      });
+    });
+
   } catch (error) {
-    console.error('Error setting up demo user:', error);
-    process.exit(1);
+    console.error('❌ Error creating demo user:', error);
   } finally {
-    db.close();
+    db.close((err) => {
+      if (err) {
+        console.error('❌ Error closing database:', err.message);
+      } else {
+        console.log('✅ Database connection closed');
+      }
+    });
   }
 }
 
-// Run if called directly
-if (require.main === module) {
-  createDemoUser()
-    .then(() => {
-      console.log('Demo user setup completed successfully');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('Demo user setup failed:', error);
-      process.exit(1);
-    });
-}
-
-module.exports = { createDemoUser };
+createDemoUser();

@@ -1,3 +1,4 @@
+// Frontend-specific retry utilities
 // React hook for network status
 import { useState, useEffect } from 'react';
 

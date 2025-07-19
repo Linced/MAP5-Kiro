@@ -1,9 +1,9 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { 
-  ApiResponse, 
-  AuthResult, 
-  User, 
-  Upload, 
+import {
+  ApiResponse,
+  AuthResult,
+  User,
+  Upload,
   QueryOptions,
   Strategy,
   CreateStrategyRequest,
@@ -24,7 +24,7 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
     this.api = axios.create({
       baseURL: this.baseURL,
       headers: {
@@ -74,7 +74,7 @@ class ApiService {
     useFileUploadConfig = false
   ): Promise<T> {
     const config = useFileUploadConfig ? FILE_UPLOAD_RETRY_CONFIG : API_RETRY_CONFIG;
-    
+
     try {
       const response = await withRetry(operation, config);
       return response.data;
@@ -108,11 +108,11 @@ class ApiService {
       () => this.api.post('/api/auth/register', { email, password }),
       'register user'
     );
-    
+
     if (result.success) {
       this.setToken(result.data.token);
     }
-    
+
     return result;
   }
 
@@ -121,11 +121,11 @@ class ApiService {
       () => this.api.post('/api/auth/login', { email, password }),
       'login user'
     );
-    
+
     if (result.success) {
       this.setToken(result.data.token);
     }
-    
+
     return result;
   }
 
@@ -134,7 +134,7 @@ class ApiService {
       const response: AxiosResponse<ApiResponse<{ message: string }>> = await this.api.post('/api/auth/verify-email', {
         token,
       });
-      
+
       return response.data;
     } catch (error: any) {
       return {
@@ -178,7 +178,7 @@ class ApiService {
       const response: AxiosResponse<ApiResponse<{ message: string }>> = await this.api.post('/api/auth/dev-verify', {
         email,
       });
-      
+
       return response.data;
     } catch (error: any) {
       return {
@@ -216,7 +216,7 @@ class ApiService {
 
   async getUploads(): Promise<ApiResponse<Upload[]>> {
     const cacheKey = 'uploads';
-    
+
     // Try to get from cache first
     const cachedData = uploadCache.get<ApiResponse<Upload[]>>(cacheKey);
     if (cachedData) {
@@ -229,7 +229,7 @@ class ApiService {
         success: true,
         data: response.data.success ? response.data.data.uploads : []
       };
-      
+
       // Cache the successful result
       uploadCache.set(cacheKey, result);
       return result;
@@ -265,7 +265,7 @@ class ApiService {
   async getData(uploadId: string, options: QueryOptions): Promise<ApiResponse<{ rows: any[]; pagination: any }>> {
     // Create cache key from parameters
     const cacheKey = CacheService.createKey('data', { uploadId, ...options });
-    
+
     // Try to get from cache first
     const cachedData = dataCache.get<ApiResponse<{ rows: any[]; pagination: any }>>(cacheKey);
     if (cachedData) {
@@ -287,14 +287,14 @@ class ApiService {
         params.append('filters', JSON.stringify(options.filters));
       }
 
-      const response: AxiosResponse<ApiResponse<{ rows: any[]; pagination: any }>> = 
+      const response: AxiosResponse<ApiResponse<{ rows: any[]; pagination: any }>> =
         await this.api.get(`/api/data/upload/${uploadId}?${params.toString()}`);
-      
+
       // Cache successful result
       if (response.data.success) {
         dataCache.set(cacheKey, response.data);
       }
-      
+
       return response.data;
     } catch (error: any) {
       return {
@@ -334,7 +334,7 @@ class ApiService {
     groupBy?: string;
   }): Promise<ApiResponse<{ chartData: any; options: any }>> {
     try {
-      const response: AxiosResponse<ApiResponse<{ chartData: any; options: any }>> = 
+      const response: AxiosResponse<ApiResponse<{ chartData: any; options: any }>> =
         await this.api.post('/api/charts/data', options);
       return response.data;
     } catch (error: any) {
@@ -358,7 +358,7 @@ class ApiService {
     groupBy?: string;
   }): Promise<ApiResponse<{ chartData: any; optimized: boolean; options: any }>> {
     try {
-      const response: AxiosResponse<ApiResponse<{ chartData: any; optimized: boolean; options: any }>> = 
+      const response: AxiosResponse<ApiResponse<{ chartData: any; optimized: boolean; options: any }>> =
         await this.api.post('/api/charts/optimized', options);
       return response.data;
     } catch (error: any) {
@@ -382,7 +382,7 @@ class ApiService {
     groupBy?: string;
   }): Promise<ApiResponse<{ isValid: boolean; errors: string[] }>> {
     try {
-      const response: AxiosResponse<ApiResponse<{ isValid: boolean; errors: string[] }>> = 
+      const response: AxiosResponse<ApiResponse<{ isValid: boolean; errors: string[] }>> =
         await this.api.post('/api/charts/validate', options);
       return response.data;
     } catch (error: any) {
@@ -409,7 +409,7 @@ class ApiService {
   }): Promise<ApiResponse<Strategy[]>> {
     try {
       const params = new URLSearchParams();
-      
+
       if (options?.page) params.append('page', options.page.toString());
       if (options?.limit) params.append('limit', options.limit.toString());
       if (options?.name) params.append('name', options.name);
@@ -418,7 +418,7 @@ class ApiService {
       if (options?.sortBy) params.append('sortBy', options.sortBy);
       if (options?.sortOrder) params.append('sortOrder', options.sortOrder);
 
-      const response: AxiosResponse<ApiResponse<Strategy[]>> = 
+      const response: AxiosResponse<ApiResponse<Strategy[]>> =
         await this.api.get(`/api/strategies?${params.toString()}`);
       return response.data;
     } catch (error: any) {
@@ -499,7 +499,7 @@ class ApiService {
 
   async assignStrategyToBucket(strategyId: number, bucketId: number | null): Promise<ApiResponse<{ message: string }>> {
     try {
-      const response: AxiosResponse<ApiResponse<{ message: string }>> = 
+      const response: AxiosResponse<ApiResponse<{ message: string }>> =
         await this.api.put(`/api/strategies/${strategyId}/bucket`, { bucketId });
       return response.data;
     } catch (error: any) {
@@ -516,7 +516,7 @@ class ApiService {
 
   async updateStrategyTags(strategyId: number, tagIds: number[]): Promise<ApiResponse<{ message: string }>> {
     try {
-      const response: AxiosResponse<ApiResponse<{ message: string }>> = 
+      const response: AxiosResponse<ApiResponse<{ message: string }>> =
         await this.api.put(`/api/strategies/${strategyId}/tags`, { tagIds });
       return response.data;
     } catch (error: any) {
@@ -695,5 +695,9 @@ class ApiService {
 }
 
 // Create and export a singleton instance
-export const apiService = new ApiService();
-export default apiService;
+const realApiService = new ApiService();
+
+// Temporary: Use mock API service to bypass backend issues
+import { mockApiService } from './mockApi';
+export const apiService = mockApiService;
+export default mockApiService;
