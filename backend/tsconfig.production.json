@@ -5,6 +5,8 @@
     "noUnusedParameters": false,
     "exactOptionalPropertyTypes": false,
     "noImplicitReturns": false,
+    "noImplicitAny": false,
+    "strict": false,
     "sourceMap": false,
     "declaration": false,
     "declarationMap": false
