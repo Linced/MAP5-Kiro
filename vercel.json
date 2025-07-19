@@ -1,23 +1,18 @@
 {
   "version": 2,
-  "name": "trade-insight-frontend",
   "builds": [
     {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "frontend/dist"
+        "distDir": "dist"
       }
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "https://trade-insight-backend.onrender.com/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/dist/$1"
+      "source": "/api/(.*)",
+      "destination": "https://your-actual-render-service-name.onrender.com/api/$1"
     }
   ],
   "headers": [

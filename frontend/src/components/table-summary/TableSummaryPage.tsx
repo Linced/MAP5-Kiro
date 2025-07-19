@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../../services/api';
 import { LoadingSpinner } from '../common/LoadingSpinner';
+import { Upload } from '../../types';
 import { 
   TableCellsIcon, 
   DocumentArrowDownIcon,
@@ -11,17 +12,6 @@ import {
   ChartBarIcon,
   CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
-
-interface Upload {
-  id: string;
-  filename: string;
-  originalName: string;
-  size: number;
-  uploadedAt: string;
-  status: string;
-  recordCount: number;
-  columns: string[];
-}
 
 interface TableData {
   headers: string[];
