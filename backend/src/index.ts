@@ -13,59 +13,52 @@ const PORT = process.env.PORT || 3001;
 // Production security configuration
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      scriptSrc: ["'self'"],
-      connectSrc: ["'self'", isProduction ? "https://map5-nine.vercel.app" : "http://localhost:3000"],
-    },
-  },
-  crossOriginEmbedderPolicy: false,
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  }
-}));
+// Security middleware - Temporarily disabled for CORS debugging
+// app.use(helmet({
+//   contentSecurityPolicy: {
+//     directives: {
+//       defaultSrc: ["'self'"],
+//       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+//       fontSrc: ["'self'", "https://fonts.gstatic.com"],
+//       imgSrc: ["'self'", "data:", "https:"],
+//       scriptSrc: ["'self'"],
+//       connectSrc: ["'self'", isProduction ? "https://map5-nine.vercel.app" : "http://localhost:3000"],
+//     },
+//   },
+//   crossOriginEmbedderPolicy: false,
+//   hsts: {
+//     maxAge: 31536000,
+//     includeSubDomains: true,
+//     preload: true
+//   }
+// }));
 
-// CORS configuration
+// CORS configuration - Temporarily permissive for debugging
 const corsOptions = {
-  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-    const allowedOrigins = [
-      'http://localhost:3000', // Development frontend (CRA)
-      'http://localhost:5173', // Development frontend (Vite)
-      'http://127.0.0.1:5173', // Alternative localhost
-      'http://127.0.0.1:3000', // Alternative localhost
-      'https://trade-insight-frontend.vercel.app', // Old production frontend
-      'https://map5-nine.vercel.app', // Current production frontend
-      process.env.FRONTEND_URL // Environment-specific frontend URL
-    ].filter(Boolean);
-
-    // Allow requests with no origin (mobile apps, etc.)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      console.log(`CORS allowed origin: ${origin}`);
-      callback(null, true);
-    } else {
-      console.log(`CORS blocked origin: ${origin}. Allowed origins:`, allowedOrigins);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // Allow all origins temporarily
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
   preflightContinue: false,
   optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
+
+// Additional explicit CORS headers as fallback
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept, Origin');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 // Body parsing middleware
 app.use(express.json({ limit: '25mb' }));
