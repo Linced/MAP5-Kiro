@@ -22,7 +22,7 @@ services:
       - key: SMTP_PORT
         value: 587
       - key: FRONTEND_URL
-        value: https://trade-insight-frontend.vercel.app
+        value: https://map5-nine.vercel.app
     disk:
       name: data
       mountPath: /opt/render/project/src/data
