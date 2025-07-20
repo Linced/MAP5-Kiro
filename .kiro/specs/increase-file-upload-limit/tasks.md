@@ -26,7 +26,7 @@
   - Update any existing tests that reference the old 10MB or 20MB limits
   - _Requirements: 1.1, 1.2, 1.3, 3.1_
 
-- [ ] 5. Verify end-to-end file upload functionality
+- [x] 5. Verify end-to-end file upload functionality
 
 
   - Create integration tests to ensure frontend and backend work together with 25MB limit
