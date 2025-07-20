@@ -198,7 +198,7 @@ class ApiService {
     formData.append('file', file);
 
     return await this.executeWithRetry(
-      () => this.api.post('/api/upload', formData, {
+      () => this.api.post('/api/upload/csv', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -697,7 +697,6 @@ class ApiService {
 // Create and export a singleton instance
 const realApiService = new ApiService();
 
-// Temporary: Use mock API service to bypass backend issues
-import { mockApiService } from './mockApi';
-export const apiService = mockApiService;
-export default mockApiService;
+// Export the real API service
+export const apiService = realApiService;
+export default realApiService;
