@@ -12,7 +12,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://your-actual-render-service-name.onrender.com/api/$1"
+      "destination": "https://map5-kiro-backend.onrender.com/api/$1"
     }
   ],
   "headers": [
@@ -45,6 +45,6 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "https://trade-insight-backend.onrender.com"
+    "VITE_API_URL": "https://map5-kiro-backend.onrender.com"
   }
 }
