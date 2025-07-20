@@ -22,7 +22,7 @@ app.use(helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:"],
       scriptSrc: ["'self'"],
-      connectSrc: ["'self'", isProduction ? "https://trade-insight-frontend.vercel.app" : "http://localhost:3000"],
+      connectSrc: ["'self'", isProduction ? "https://map5-nine.vercel.app" : "http://localhost:3000"],
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -41,7 +41,8 @@ const corsOptions = {
       'http://localhost:5173', // Development frontend (Vite)
       'http://127.0.0.1:5173', // Alternative localhost
       'http://127.0.0.1:3000', // Alternative localhost
-      'https://trade-insight-frontend.vercel.app', // Production frontend
+      'https://trade-insight-frontend.vercel.app', // Old production frontend
+      'https://map5-nine.vercel.app', // Current production frontend
       process.env.FRONTEND_URL // Environment-specific frontend URL
     ].filter(Boolean);
 
@@ -49,16 +50,19 @@ const corsOptions = {
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.includes(origin)) {
+      console.log(`CORS allowed origin: ${origin}`);
       callback(null, true);
     } else {
-      console.log(`CORS blocked origin: ${origin}`);
+      console.log(`CORS blocked origin: ${origin}. Allowed origins:`, allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['X-Total-Count', 'X-Page-Count']
+  exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
+  preflightContinue: false,
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
