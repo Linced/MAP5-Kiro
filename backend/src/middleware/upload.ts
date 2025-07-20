@@ -17,10 +17,14 @@ const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFil
   }
 };
 
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB limit
+
+console.log(`🔧 Upload middleware configured with MAX_FILE_SIZE: ${MAX_FILE_SIZE} bytes (${MAX_FILE_SIZE / (1024 * 1024)}MB)`);
+
 const upload = multer({
   storage,
   limits: {
-    fileSize: 25 * 1024 * 1024, // 25MB limit
+    fileSize: MAX_FILE_SIZE,
     files: 1, // Only allow single file upload
   },
   fileFilter,
