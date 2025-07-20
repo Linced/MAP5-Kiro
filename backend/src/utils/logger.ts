@@ -35,7 +35,7 @@ const DEFAULT_CONFIG: LoggerConfig = {
   logLevel: process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG,
   logToFile: process.env.NODE_ENV === 'production',
   logDirectory: path.join(process.cwd(), 'logs'),
-  maxFileSize: 10 * 1024 * 1024, // 10MB
+  maxFileSize: 25 * 1024 * 1024, // 25MB
   maxFiles: 5,
   enableConsole: true
 };

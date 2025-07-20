@@ -1,14 +1,15 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { vi } from 'vitest';
 import { FormulaBuilder } from '../FormulaBuilder';
 
 describe('FormulaBuilder', () => {
   const mockColumns = ['Open', 'High', 'Low', 'Close', 'Volume'];
-  const mockOnFormulaChange = jest.fn();
-  const mockOnValidationChange = jest.fn();
+  const mockOnFormulaChange = vi.fn();
+  const mockOnValidationChange = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders formula input and column buttons', () => {

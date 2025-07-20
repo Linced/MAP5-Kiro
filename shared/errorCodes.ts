@@ -59,7 +59,7 @@ export const ERROR_MESSAGES: Record<string, string> = {
   [ErrorCodes.INVALID_CREDENTIALS]: 'Invalid email or password. Please check your credentials and try again.',
   [ErrorCodes.EMAIL_NOT_VERIFIED]: 'Please verify your email address before logging in.',
   [ErrorCodes.EMAIL_ALREADY_EXISTS]: 'An account with this email already exists.',
-  [ErrorCodes.FILE_TOO_LARGE]: 'The file is too large. Please select a file smaller than 10MB.',
+  [ErrorCodes.FILE_TOO_LARGE]: 'The file is too large. Please select a file smaller than 25MB.',
   [ErrorCodes.INVALID_FILE_TYPE]: 'Invalid file type. Please select a CSV file.',
   [ErrorCodes.CSV_PARSE_ERROR]: 'Unable to parse the CSV file. Please check the file format and try again.',
   [ErrorCodes.VALIDATION_ERROR]: 'Please check your input and try again.',

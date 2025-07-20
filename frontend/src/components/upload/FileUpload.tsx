@@ -25,10 +25,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       return 'Please select a CSV file (.csv extension required)';
     }
 
-    // Check file size (10MB limit)
-    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    // Check file size (25MB limit)
+    const maxSize = 25 * 1024 * 1024; // 25MB in bytes
     if (file.size > maxSize) {
-      return 'File size must be less than 10MB';
+      return 'File size must be less than 25MB';
     }
 
     return null;
@@ -160,7 +160,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 Drop your CSV file here, or click to select
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                Maximum file size: 10MB
+                Maximum file size: 25MB
               </p>
             </div>
           </div>

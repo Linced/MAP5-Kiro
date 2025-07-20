@@ -20,7 +20,7 @@ const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFil
 const upload = multer({
   storage,
   limits: {
-    fileSize: 20 * 1024 * 1024, // 20MB limit
+    fileSize: 25 * 1024 * 1024, // 25MB limit
     files: 1, // Only allow single file upload
   },
   fileFilter,
@@ -37,7 +37,7 @@ export const uploadCSVMiddleware = (req: Request, res: Response, next: NextFunct
           success: false,
           error: {
             code: 'FILE_TOO_LARGE',
-            message: 'File size exceeds 20MB limit. Please upload a smaller CSV file.'
+            message: 'File size exceeds 25MB limit. Please upload a smaller CSV file.'
           }
         });
       }
