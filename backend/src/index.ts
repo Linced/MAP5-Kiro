@@ -33,25 +33,9 @@ const isProduction = process.env.NODE_ENV === 'production';
 //   }
 // }));
 
-// CORS configuration for production and development
+// CORS configuration - simplified and more permissive for debugging
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'https://map5-nine.vercel.app',
-      'http://localhost:5173',
-      'http://localhost:3000'
-    ];
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // Allow all origins temporarily for debugging
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
@@ -64,19 +48,9 @@ app.use(cors(corsOptions));
 
 // Additional explicit CORS headers as fallback
 app.use((req, res, next) => {
-  const allowedOrigins = [
-    'https://map5-nine.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:3000'
-  ];
-    
-  const requestOrigin = req.headers.origin;
-  
-  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
-    res.header('Access-Control-Allow-Origin', requestOrigin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-  }
-  
+  // Allow all origins temporarily for debugging
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept, Origin');
   
