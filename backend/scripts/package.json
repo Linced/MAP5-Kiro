@@ -1,0 +1,13 @@
+{
+  "name": "tradeinsight-scripts",
+  "version": "1.0.0",
+  "description": "Utility scripts for TradeInsight",
+  "main": "verify-demo-user.js",
+  "scripts": {
+    "verify-demo": "node verify-demo-user.js"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.6",
+    "bcrypt": "^5.1.0"
+  }
+}
