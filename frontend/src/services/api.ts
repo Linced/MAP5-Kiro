@@ -47,10 +47,12 @@ class ApiService {
         config.headers.Authorization = `Bearer ${token}`;
       }
       // Debug logging to see what URL is being used
-      console.log('API Request:', {
+      console.log('API Request Debug:', {
         baseURL: config.baseURL,
         url: config.url,
-        fullURL: config.baseURL ? `${config.baseURL}${config.url}` : config.url
+        fullURL: config.baseURL ? `${config.baseURL}${config.url}` : config.url,
+        method: config.method,
+        timestamp: new Date().toISOString()
       });
       return config;
     });
