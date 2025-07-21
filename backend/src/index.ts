@@ -186,7 +186,7 @@ app.get('/api/performance', (_req, res) => {
 });
 
 // Import routes
-import { authRoutes, uploadRoutes, dataRoutes, calculationRoutes, chartRoutes, strategyRoutes, bucketRoutes, tagRoutes } from './routes';
+import { authRoutes, uploadRoutes, dataRoutes, calculationRoutes, chartRoutes, strategyRoutes, bucketRoutes, tagRoutes, tempAdminRoutes } from './routes';
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -197,6 +197,7 @@ app.use('/api/charts', chartRoutes);
 app.use('/api/strategies', strategyRoutes);
 app.use('/api/buckets', bucketRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/temp-admin', tempAdminRoutes);
 
 // Root route
 app.get('/', (_req, res) => {

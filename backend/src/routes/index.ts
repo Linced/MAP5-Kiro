@@ -7,3 +7,4 @@ export { default as chartRoutes } from './charts';
 export { default as strategyRoutes } from './strategies';
 export { default as bucketRoutes } from './buckets';
 export { default as tagRoutes } from './tags';
+export { default as tempAdminRoutes } from './temp-admin';
