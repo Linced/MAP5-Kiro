@@ -42,6 +42,7 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "https://map5-kiro-backend.onrender.com"
+    "VITE_APP_NAME": "TradeInsight",
+    "VITE_APP_VERSION": "1.0.0"
   }
 }
