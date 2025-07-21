@@ -24,16 +24,22 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    // Use relative URLs in production to leverage Vercel's proxy, direct URLs in development
-    // Force empty baseURL to use relative paths that will go through Vercel's rewrites
-    this.baseURL = '';
+    // FORCE the correct backend URL for production
+    const isProduction = window.location.hostname !== 'localhost';
     
-    // Ensure we're not using any environment variables that might override this
-    const envApiUrl = import.meta.env.VITE_API_URL;
-    console.log('Environment API URL:', envApiUrl);
+    if (isProduction) {
+      // In production, use the correct backend URL directly
+      this.baseURL = 'https://map5-kiro-backend.onrender.com';
+    } else {
+      // In development, use localhost
+      this.baseURL = 'http://localhost:3001';
+    }
+    
+    console.log('🔧 API Service Constructor');
+    console.log('Production mode:', isProduction);
     console.log('Using baseURL:', this.baseURL);
     console.log('Current location:', window.location.href);
-    console.log('Build timestamp:', '2025-07-21-11-00');
+    console.log('Environment VITE_API_URL:', import.meta.env.VITE_API_URL);
     
     this.api = axios.create({
       baseURL: this.baseURL,
@@ -41,6 +47,8 @@ class ApiService {
         'Content-Type': 'application/json',
       },
     });
+    
+    console.log('✅ Axios instance created with baseURL:', this.baseURL);
 
     // Add request interceptor to include auth token
     this.api.interceptors.request.use((config: any) => {
@@ -49,13 +57,19 @@ class ApiService {
         config.headers.Authorization = `Bearer ${token}`;
       }
       // Debug logging to see what URL is being used
-      console.log('API Request Debug:', {
+      console.log('🚀 API Request Debug:', {
         baseURL: config.baseURL,
         url: config.url,
         fullURL: config.baseURL ? `${config.baseURL}${config.url}` : config.url,
         method: config.method,
         timestamp: new Date().toISOString()
       });
+      
+      // CRITICAL: Ensure we're using the correct URL
+      if (config.baseURL && config.baseURL.includes('trade-insight-backend')) {
+        console.error('❌ WRONG BACKEND URL DETECTED:', config.baseURL);
+        console.error('❌ This should be map5-kiro-backend.onrender.com');
+      }
       return config;
     });
 
