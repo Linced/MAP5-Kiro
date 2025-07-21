@@ -32,6 +32,8 @@ class ApiService {
     const envApiUrl = import.meta.env.VITE_API_URL;
     console.log('Environment API URL:', envApiUrl);
     console.log('Using baseURL:', this.baseURL);
+    console.log('Current location:', window.location.href);
+    console.log('Build timestamp:', '2025-07-21-11-00');
     
     this.api = axios.create({
       baseURL: this.baseURL,
