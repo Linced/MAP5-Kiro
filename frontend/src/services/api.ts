@@ -29,7 +29,7 @@ class ApiService {
     
     if (isProduction) {
       // In production, use the correct backend URL directly (matches render.yaml service name)
-      this.baseURL = 'https://trade-insight-backend.onrender.com';
+      this.baseURL = 'https://map5-kiro-backend.onrender.com';
     } else {
       // In development, use localhost
       this.baseURL = 'http://localhost:3001';
