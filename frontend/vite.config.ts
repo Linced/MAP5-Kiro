@@ -101,7 +101,7 @@ export default defineConfig(({ mode }) => ({
   define: {
     // Define environment variables for production
     __API_URL__: mode === 'production' 
-      ? JSON.stringify(process.env.VITE_API_URL || 'https://trade-insight-backend.onrender.com')
-      : JSON.stringify('http://localhost:3002')
+      ? JSON.stringify('')
+      : JSON.stringify('http://localhost:3001')
   }
 }));
