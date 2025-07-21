@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://trade-insight-backend.onrender.com/api/$1"
+      "destination": "https://trade-insight-backend.onrender.com:10000/api/$1"
     },
     {
       "source": "/(.*)",
