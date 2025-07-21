@@ -24,15 +24,16 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    // FORCE the correct backend URL for production
+    // Use environment variable for API URL with fallback
+    const apiUrl = import.meta.env.VITE_API_URL;
     const isProduction = window.location.hostname !== 'localhost';
     
     if (isProduction) {
-      // In production, use the correct backend URL directly (matches render.yaml service name)
-      this.baseURL = 'https://map5-kiro-backend.onrender.com';
+      // In production, use the environment variable or fallback to the render URL
+      this.baseURL = apiUrl || 'https://map5-kiro-backend.onrender.com';
     } else {
-      // In development, use localhost
-      this.baseURL = 'http://localhost:3001';
+      // In development, use localhost or the environment variable
+      this.baseURL = apiUrl || 'http://localhost:3001';
     }
     
     console.log('🔧 API Service Constructor');
