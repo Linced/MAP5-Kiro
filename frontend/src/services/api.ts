@@ -24,7 +24,8 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+    // Use relative URLs in production to leverage Vercel's proxy, direct URLs in development
+    this.baseURL = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:8080');
     this.api = axios.create({
       baseURL: this.baseURL,
       headers: {
