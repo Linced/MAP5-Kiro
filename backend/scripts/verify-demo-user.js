@@ -1,151 +1,98 @@
 const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcrypt');
 const path = require('path');
-const fs = require('fs');
 
-// Configuration
+// Path to the database file
+const dbPath = path.join(__dirname, '..', 'data', 'tradeinsight.db');
+
+// Demo account email
 const DEMO_EMAIL = 'demo@tradeinsight.com';
-const DEMO_PASSWORD = 'Demo123!';
-const SALT_ROUNDS = 12;
 
-// Determine database path
-const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '..', 'data', 'tradeinsight.db');
-
-console.log(`Using database at: ${dbPath}`);
-
-// Check if database exists
-if (!fs.existsSync(dbPath)) {
-  console.error(`Database file not found at: ${dbPath}`);
-  console.log('Creating data directory if it doesn\'t exist...');
-  
-  const dataDir = path.dirname(dbPath);
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-    console.log(`Created directory: ${dataDir}`);
-  }
-}
-
-// Connect to the database
-const db = new sqlite3.Database(dbPath, (err) => {
+// Open the database
+const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
   if (err) {
-    console.error('Error connecting to database:', err.message);
+    console.error('Error opening database:', err.message);
     process.exit(1);
   }
-  console.log('Connected to the SQLite database.');
+  console.log(`Connected to the database at ${dbPath}`);
 });
 
-// Create tables if they don't exist
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      email_verified INTEGER DEFAULT 0,
-      verification_token TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `, (err) => {
-    if (err) {
-      console.error('Error creating users table:', err.message);
-      return;
-    }
-    console.log('Users table ready.');
-    
-    // Check if demo user exists
-    db.get('SELECT * FROM users WHERE email = ?', [DEMO_EMAIL], async (err, row) => {
+// Function to verify the demo user
+async function verifyDemoUser() {
+  return new Promise((resolve, reject) => {
+    // First, check if the user exists
+    db.get('SELECT * FROM users WHERE email = ?', [DEMO_EMAIL], (err, row) => {
       if (err) {
-        console.error('Error checking for demo user:', err.message);
-        closeDb();
+        console.error('Error checking user:', err.message);
+        reject(err);
         return;
       }
-      
-      if (row) {
-        console.log('Demo user already exists.');
+
+      if (!row) {
+        console.log(`User ${DEMO_EMAIL} does not exist. Creating demo user...`);
         
-        // Update the user to be verified
+        // Create a new demo user with a known password hash (for "Demo123!")
+        // This is a bcrypt hash for "Demo123!" with 12 rounds
+        const passwordHash = '$2b$12$8NwX.OLrECrKa3TL1KYsZeYJeJ0zJrN9YQI9C1aYsF9rF.3qP3Ot2';
+        
         db.run(
-          'UPDATE users SET email_verified = 1, verification_token = NULL, updated_at = CURRENT_TIMESTAMP WHERE email = ?',
-          [DEMO_EMAIL],
+          `INSERT INTO users (email, password_hash, email_verified, created_at, updated_at) 
+           VALUES (?, ?, 1, datetime('now'), datetime('now'))`,
+          [DEMO_EMAIL, passwordHash],
           function(err) {
             if (err) {
-              console.error('Error updating demo user:', err.message);
-              closeDb();
+              console.error('Error creating demo user:', err.message);
+              reject(err);
               return;
             }
             
-            console.log(`Demo user verified successfully. Changes: ${this.changes}`);
-            
-            // Update password if needed
-            bcrypt.hash(DEMO_PASSWORD, SALT_ROUNDS, (err, hash) => {
-              if (err) {
-                console.error('Error hashing password:', err.message);
-                closeDb();
-                return;
-              }
-              
-              db.run(
-                'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?',
-                [hash, DEMO_EMAIL],
-                function(err) {
-                  if (err) {
-                    console.error('Error updating password:', err.message);
-                    closeDb();
-                    return;
-                  }
-                  
-                  console.log(`Demo user password updated. Changes: ${this.changes}`);
-                  console.log('\nDemo account is ready to use:');
-                  console.log(`Email: ${DEMO_EMAIL}`);
-                  console.log(`Password: ${DEMO_PASSWORD}`);
-                  closeDb();
-                }
-              );
-            });
+            console.log(`Demo user created with ID: ${this.lastID}`);
+            console.log('Email verification set to TRUE');
+            resolve(true);
           }
         );
       } else {
-        console.log('Demo user does not exist. Creating...');
+        console.log(`User ${DEMO_EMAIL} exists with ID: ${row.id}`);
+        console.log(`Current email verification status: ${row.email_verified ? 'Verified' : 'Not Verified'}`);
         
-        // Create a new demo user
-        bcrypt.hash(DEMO_PASSWORD, SALT_ROUNDS, (err, hash) => {
-          if (err) {
-            console.error('Error hashing password:', err.message);
-            closeDb();
-            return;
-          }
-          
-          db.run(
-            'INSERT INTO users (email, password_hash, email_verified) VALUES (?, ?, 1)',
-            [DEMO_EMAIL, hash],
-            function(err) {
-              if (err) {
-                console.error('Error creating demo user:', err.message);
-                closeDb();
-                return;
-              }
-              
-              console.log(`Demo user created with ID: ${this.lastID}`);
-              console.log('\nDemo account is ready to use:');
-              console.log(`Email: ${DEMO_EMAIL}`);
-              console.log(`Password: ${DEMO_PASSWORD}`);
-              closeDb();
+        // Update the user to set email_verified to true
+        db.run(
+          `UPDATE users 
+           SET email_verified = 1, 
+               verification_token = NULL, 
+               updated_at = datetime('now') 
+           WHERE email = ?`,
+          [DEMO_EMAIL],
+          function(err) {
+            if (err) {
+              console.error('Error updating user:', err.message);
+              reject(err);
+              return;
             }
-          );
-        });
+            
+            console.log(`Updated ${this.changes} row(s)`);
+            console.log('Email verification set to TRUE');
+            resolve(true);
+          }
+        );
       }
     });
   });
-});
-
-// Function to close the database connection
-function closeDb() {
-  db.close((err) => {
-    if (err) {
-      console.error('Error closing database:', err.message);
-    } else {
-      console.log('Database connection closed.');
-    }
-  });
 }
+
+// Execute the function and close the database
+verifyDemoUser()
+  .then(() => {
+    console.log('Demo user verification completed successfully');
+    db.close((err) => {
+      if (err) {
+        console.error('Error closing database:', err.message);
+      } else {
+        console.log('Database connection closed');
+      }
+    });
+  })
+  .catch((err) => {
+    console.error('Error verifying demo user:', err);
+    db.close();
+    process.exit(1);
+  });
