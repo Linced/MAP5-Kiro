@@ -1,8 +1,32 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
-// Path to the database file
-const dbPath = path.join(__dirname, '..', 'data', 'tradeinsight.db');
+// Try to load environment variables
+try {
+  require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+  require('dotenv').config({ path: path.join(__dirname, '..', '.env.production') });
+} catch (e) {
+  console.log('Could not load dotenv, continuing with default paths');
+}
+
+// Determine the database path
+let dbPath;
+if (process.env.DATABASE_PATH) {
+  dbPath = process.env.DATABASE_PATH;
+  console.log(`Using database path from environment: ${dbPath}`);
+} else {
+  // Default path
+  dbPath = path.join(__dirname, '..', 'data', 'tradeinsight.db');
+  console.log(`Using default database path: ${dbPath}`);
+}
+
+// Ensure the directory exists
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  console.log(`Creating database directory: ${dbDir}`);
+  fs.mkdirSync(dbDir, { recursive: true });
+}
 
 // Demo account email
 const DEMO_EMAIL = 'demo@tradeinsight.com';
