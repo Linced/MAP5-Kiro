@@ -27,6 +27,12 @@ class ApiService {
     // Use relative URLs in production to leverage Vercel's proxy, direct URLs in development
     // Force empty baseURL to use relative paths that will go through Vercel's rewrites
     this.baseURL = '';
+    
+    // Ensure we're not using any environment variables that might override this
+    const envApiUrl = import.meta.env.VITE_API_URL;
+    console.log('Environment API URL:', envApiUrl);
+    console.log('Using baseURL:', this.baseURL);
+    
     this.api = axios.create({
       baseURL: this.baseURL,
       headers: {
