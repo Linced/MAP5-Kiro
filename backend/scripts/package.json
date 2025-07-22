@@ -1,0 +1,13 @@
+{
+  "name": "tradeinsight-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for TradeInsight backend",
+  "main": "verify-demo-user.js",
+  "scripts": {
+    "verify-demo": "node verify-demo-user.js"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.6",
+    "dotenv": "^16.3.1"
+  }
+}

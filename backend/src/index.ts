@@ -33,9 +33,9 @@ const isProduction = process.env.NODE_ENV === 'production';
 //   }
 // }));
 
-// CORS configuration - Temporarily permissive for debugging
+// CORS configuration - simplified and more permissive for debugging
 const corsOptions = {
-  origin: true, // Allow all origins temporarily
+  origin: true, // Allow all origins temporarily for debugging
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
@@ -48,7 +48,8 @@ app.use(cors(corsOptions));
 
 // Additional explicit CORS headers as fallback
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  // Allow all origins temporarily for debugging
+  res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept, Origin');
@@ -185,7 +186,7 @@ app.get('/api/performance', (_req, res) => {
 });
 
 // Import routes
-import { authRoutes, uploadRoutes, dataRoutes, calculationRoutes, chartRoutes, strategyRoutes, bucketRoutes, tagRoutes } from './routes';
+import { authRoutes, uploadRoutes, dataRoutes, calculationRoutes, chartRoutes, strategyRoutes, bucketRoutes, tagRoutes, tempAdminRoutes } from './routes';
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -196,6 +197,7 @@ app.use('/api/charts', chartRoutes);
 app.use('/api/strategies', strategyRoutes);
 app.use('/api/buckets', bucketRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/temp-admin', tempAdminRoutes);
 
 // Root route
 app.get('/', (_req, res) => {

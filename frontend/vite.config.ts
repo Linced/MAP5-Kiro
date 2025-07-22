@@ -81,9 +81,9 @@ export default defineConfig(({ mode }) => ({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true, // Remove console.log in production
+        drop_console: false, // Keep console.log in production for debugging
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn']
+        pure_funcs: []
       },
       mangle: {
         safari10: true
@@ -101,7 +101,7 @@ export default defineConfig(({ mode }) => ({
   define: {
     // Define environment variables for production
     __API_URL__: mode === 'production' 
-      ? JSON.stringify(process.env.VITE_API_URL || 'https://trade-insight-backend.onrender.com')
-      : JSON.stringify('http://localhost:3002')
+      ? JSON.stringify('')
+      : JSON.stringify('http://localhost:3001')
   }
 }));

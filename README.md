@@ -2,6 +2,12 @@
 
 A web-based trading data analysis tool that allows users to upload CSV files, view and manipulate data in tables, perform calculations, and create visualizations.
 
+## Deployment
+
+The application is deployed at:
+- Frontend: [Vercel](https://map-5-kira-6c62opehl-linceds-projects.vercel.app)
+- Backend: [Render](https://map5-kiro-backend.onrender.com)
+
 ## Project Structure
 
 ```
