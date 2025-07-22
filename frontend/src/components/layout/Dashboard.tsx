@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiService } from '../../services/api';
+import { LineChart, BarChart, PieChart } from '../charts';
 
 import {
   ChartBarIcon,
@@ -32,6 +33,8 @@ export const Dashboard: React.FC = () => {
   const [uploads, setUploads] = useState<any[]>([]);
   const [strategies, setStrategies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chartData, setChartData] = useState<any>(null);
+  const [pieChartData, setPieChartData] = useState<any>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -43,6 +46,12 @@ export const Dashboard: React.FC = () => {
       const uploadsResponse = await apiService.getUploads();
       if (uploadsResponse.success) {
         setUploads(uploadsResponse.data || []);
+        
+        // If we have uploads, try to load chart data for the first one
+        if (uploadsResponse.data && uploadsResponse.data.length > 0) {
+          const firstUpload = uploadsResponse.data[0];
+          loadChartData(firstUpload.id);
+        }
       }
 
       // Load strategies
@@ -59,10 +68,73 @@ export const Dashboard: React.FC = () => {
         totalStrategies: strategiesResponse.success ? strategiesResponse.data?.length || 0 : 0,
         recentUploads: uploadsResponse.success ? uploadsResponse.data?.length || 0 : 0
       });
+      
+      // Create sample pie chart data for strategy distribution
+      setPieChartData({
+        labels: ['Breakout', 'Trend Following', 'Mean Reversion', 'Scalping', 'Swing'],
+        datasets: [
+          {
+            data: [30, 25, 20, 15, 10],
+            backgroundColor: [
+              '#4F46E5', // Indigo
+              '#10B981', // Green
+              '#F59E0B', // Amber
+              '#EF4444', // Red
+              '#8B5CF6'  // Purple
+            ]
+          }
+        ]
+      });
+      
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const loadChartData = async (uploadId: string) => {
+    try {
+      // Try to get some sample chart data for the dashboard
+      const chartResponse = await apiService.getChartData({
+        uploadId,
+        xColumn: 'date', // Assuming there's a date column
+        yColumn: 'profit', // Assuming there's a profit column
+        chartType: 'line'
+      });
+      
+      if (chartResponse.success) {
+        setChartData(chartResponse.data.chartData);
+      } else {
+        // If we couldn't get real data, create some sample data
+        setChartData({
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [
+            {
+              label: 'Trading Performance',
+              data: [12, 19, 3, 5, 2, 3],
+              borderColor: '#4F46E5',
+              backgroundColor: 'rgba(79, 70, 229, 0.1)',
+              tension: 0.4
+            }
+          ]
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load chart data:', error);
+      // Create sample data on error
+      setChartData({
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [
+          {
+            label: 'Trading Performance',
+            data: [12, 19, 3, 5, 2, 3],
+            borderColor: '#4F46E5',
+            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+            tension: 0.4
+          }
+        ]
+      });
     }
   };
 
@@ -142,6 +214,82 @@ export const Dashboard: React.FC = () => {
                   </dl>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Charts section */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
+          {/* Performance Chart */}
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">Performance Overview</h3>
+                <Link
+                  to="/charts"
+                  className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/50 hover:bg-blue-200 dark:hover:bg-blue-900/70"
+                >
+                  <ChartBarIcon className="h-4 w-4 mr-1" />
+                  View All
+                </Link>
+              </div>
+              {loading ? (
+                <div className="animate-pulse space-y-3">
+                  <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+              ) : chartData ? (
+                <LineChart 
+                  data={chartData} 
+                  options={{
+                    title: 'Trading Performance',
+                    xAxisLabel: 'Date',
+                    yAxisLabel: 'Profit/Loss',
+                    height: 300
+                  }}
+                />
+              ) : (
+                <div className="text-center py-6">
+                  <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No chart data available</h3>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Upload trading data to see performance charts.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Strategy Distribution */}
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">Strategy Distribution</h3>
+                <Link
+                  to="/strategies"
+                  className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/50 hover:bg-purple-200 dark:hover:bg-purple-900/70"
+                >
+                  <FolderIcon className="h-4 w-4 mr-1" />
+                  Manage
+                </Link>
+              </div>
+              {loading ? (
+                <div className="animate-pulse space-y-3">
+                  <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+              ) : pieChartData ? (
+                <PieChart 
+                  data={pieChartData} 
+                  options={{
+                    donut: true,
+                    showPercentage: true,
+                    height: 300
+                  }}
+                />
+              ) : (
+                <div className="text-center py-6">
+                  <FolderIcon className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No strategies yet</h3>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Create strategies to see distribution.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -38,12 +38,12 @@ router.post('/data', async (req: Request, res: Response): Promise<void> => {
     }
 
     // Validate chart type
-    if (!['line', 'bar'].includes(chartType)) {
+    if (!['line', 'bar', 'pie'].includes(chartType)) {
       res.status(400).json({
         success: false,
         error: {
           code: 'INVALID_CHART_TYPE',
-          message: 'chartType must be either "line" or "bar"'
+          message: 'chartType must be "line", "bar", or "pie"'
         }
       });
       return;
@@ -436,6 +436,58 @@ router.post('/bar', async (req: Request, res: Response): Promise<void> => {
       error: {
         code: 'BAR_CHART_ERROR',
         message: error instanceof Error ? error.message : 'Failed to generate bar chart'
+      }
+    });
+  }
+});
+
+/**
+ * POST /api/charts/pie
+ * Generate pie chart data (convenience endpoint)
+ */
+router.post('/pie', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const options: ChartOptions = {
+      ...req.body,
+      chartType: 'pie'
+    };
+
+    // Validate required fields
+    if (!options.xColumn || !options.yColumn) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_REQUIRED_FIELDS',
+          message: 'xColumn and yColumn are required'
+        }
+      });
+      return;
+    }
+
+    // For pie charts, we need to ensure data is aggregated
+    if (!options.aggregation) {
+      options.aggregation = 'sum';
+    }
+
+    const chartData = await ChartDataService.getOptimizedChartData(userId, options);
+
+    res.json({
+      success: true,
+      data: {
+        chartData,
+        chartType: 'pie',
+        options
+      }
+    });
+
+  } catch (error) {
+    console.error('Error generating pie chart:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'PIE_CHART_ERROR',
+        message: error instanceof Error ? error.message : 'Failed to generate pie chart'
       }
     });
   }
