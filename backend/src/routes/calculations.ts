@@ -9,11 +9,15 @@ const calculationService = new CalculationService();
 // Validate formula endpoint
 router.post('/validate', authenticateToken, async (req, res) => {
   try {
-    const { formula, uploadId } = req.body;
+    const { formula, uploadId, columns } = req.body;
     
     if (!formula || !uploadId) {
       return res.status(400).json({
-        error: 'Formula and uploadId are required'
+        success: false,
+        error: {
+          code: 'MISSING_REQUIRED_FIELDS',
+          message: 'Formula and uploadId are required'
+        }
       });
     }
 
@@ -21,21 +25,131 @@ router.post('/validate', authenticateToken, async (req, res) => {
     const upload = await DataStorageService.getUploadMetadata(uploadId, req.user!.id);
     if (!upload) {
       return res.status(404).json({
-        error: 'Upload not found'
+        success: false,
+        error: {
+          code: 'UPLOAD_NOT_FOUND',
+          message: 'Upload not found'
+        }
       });
     }
 
-    const validation = calculationService.validateFormula(formula, upload.columnNames);
+    const availableColumns = columns || upload.columnNames;
+    const validation = calculationService.validateFormula(formula, availableColumns);
     
     return res.json({
-      isValid: validation.isValid,
-      errors: validation.errors,
-      warnings: validation.warnings || []
+      success: true,
+      data: {
+        isValid: validation.isValid,
+        error: validation.errors?.[0] || undefined,
+        warnings: validation.warnings || []
+      }
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return res.status(500).json({
-      error: `Formula validation failed: ${errorMessage}`
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: `Formula validation failed: ${errorMessage}`
+      }
+    });
+  }
+});
+
+// Execute formula endpoint
+router.post('/execute', authenticateToken, async (req, res) => {
+  try {
+    const { formula, uploadId, columns, limit = 100 } = req.body;
+    
+    if (!formula || !uploadId) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_REQUIRED_FIELDS',
+          message: 'Formula and uploadId are required'
+        }
+      });
+    }
+
+    // Get upload data
+    const data = await DataStorageService.getData(uploadId, req.user!.id, { 
+      page: 1, 
+      limit: Math.min(limit, 1000) 
+    });
+    
+    if (!data || !data.rows) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'DATA_NOT_FOUND',
+          message: 'No data found for this upload'
+        }
+      });
+    }
+
+    const results = calculationService.executeFormula(formula, data.rows);
+    const preview = data.rows.slice(0, 10).map((row, index) => ({
+      ...row,
+      calculatedValue: results[index]
+    }));
+    
+    return res.json({
+      success: true,
+      data: {
+        results,
+        preview
+      }
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'EXECUTION_ERROR',
+        message: `Formula execution failed: ${errorMessage}`
+      }
+    });
+  }
+});
+
+// Save calculated column endpoint
+router.post('/columns', authenticateToken, async (req, res) => {
+  try {
+    const { uploadId, columnName, formula, description } = req.body;
+    
+    if (!uploadId || !columnName || !formula) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_REQUIRED_FIELDS',
+          message: 'uploadId, columnName, and formula are required'
+        }
+      });
+    }
+
+    const columnId = await calculationService.saveCalculatedColumn(
+      req.user!.id,
+      uploadId,
+      columnName,
+      formula,
+      description
+    );
+    
+    return res.json({
+      success: true,
+      data: {
+        message: 'Calculated column saved successfully',
+        columnId
+      }
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'SAVE_ERROR',
+        message: `Failed to save calculated column: ${errorMessage}`
+      }
     });
   }
 });
@@ -47,7 +161,10 @@ router.post('/preview', authenticateToken, async (req, res) => {
     
     if (!formula || !uploadId) {
       return res.status(400).json({
-        error: 'Formula and uploadId are required'
+        success: false,
+        error: {
+          code: 'MISSING_REQUIRED_FIELDS',
+          message: 'Formula and uploadId are required'
       });
     }
 

@@ -1,23 +1,40 @@
 import React, { useState, useEffect } from 'react';
+import { apiService } from '../../services/api';
 
 interface FormulaBuilderProps {
+  uploadId?: string;
   columns: string[];
   onFormulaChange: (formula: string) => void;
   onValidationChange: (isValid: boolean, error?: string) => void;
   initialFormula?: string;
+  className?: string;
 }
 
 export const FormulaBuilder: React.FC<FormulaBuilderProps> = ({
+  uploadId,
   columns,
   onFormulaChange,
   onValidationChange,
-  initialFormula = ''
+  initialFormula = '',
+  className = ''
 }) => {
   const [formula, setFormula] = useState(initialFormula);
   const [error, setError] = useState<string>('');
+  const [isValidating, setIsValidating] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Common functions and operators
+  const commonFunctions = [
+    'SUM', 'AVG', 'MIN', 'MAX', 'COUNT',
+    'ABS', 'ROUND', 'FLOOR', 'CEIL',
+    'IF', 'AND', 'OR', 'NOT'
+  ];
+
+  const operators = ['+', '-', '*', '/', '(', ')', '>', '<', '>=', '<=', '==', '!='];
 
   // Basic formula validation
-  const validateFormula = (formulaText: string): { isValid: boolean; error?: string } => {
+  const validateFormula = async (formulaText: string): Promise<{ isValid: boolean; error?: string }> => {
     if (!formulaText.trim()) {
       return { isValid: false, error: 'Formula cannot be empty' };
     }
@@ -46,8 +63,31 @@ export const FormulaBuilder: React.FC<FormulaBuilderProps> = ({
       }
     }
 
-    // Check for valid operators and structure
-    const validPattern = /^[\[\]\w\s+\-*/().]+$/;
+    // If we have an uploadId, validate with the backend
+    if (uploadId) {
+      try {
+        setIsValidating(true);
+        const response = await apiService.validateFormula({
+          uploadId,
+          formula: formulaText,
+          columns
+        });
+        
+        if (response.success) {
+          return { isValid: response.data.isValid, error: response.data.error };
+        } else {
+          return { isValid: false, error: response.error?.message || 'Validation failed' };
+        }
+      } catch (err) {
+        console.error('Formula validation error:', err);
+        return { isValid: false, error: 'Failed to validate formula' };
+      } finally {
+        setIsValidating(false);
+      }
+    }
+
+    // Basic client-side validation
+    const validPattern = /^[\[\]\w\s+\-*/().><=!]+$/;
     if (!validPattern.test(formulaText)) {
       return { isValid: false, error: 'Invalid characters in formula' };
     }

@@ -863,6 +863,72 @@ class ApiService {
       };
     }
   }
+
+  // Formula validation methods
+  async validateFormula(options: {
+    uploadId: string;
+    formula: string;
+    columns: string[];
+  }): Promise<ApiResponse<{ isValid: boolean; error?: string }>> {
+    try {
+      const response: AxiosResponse<ApiResponse<{ isValid: boolean; error?: string }>> = 
+        await this.api.post('/api/calculations/validate', options);
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: error.response?.data?.error?.code || 'NETWORK_ERROR',
+          message: error.response?.data?.error?.message || 'Failed to validate formula',
+          details: error.response?.data?.error?.details,
+        },
+      };
+    }
+  }
+
+  async executeFormula(options: {
+    uploadId: string;
+    formula: string;
+    columns: string[];
+    limit?: number;
+  }): Promise<ApiResponse<{ results: number[]; preview: any[] }>> {
+    try {
+      const response: AxiosResponse<ApiResponse<{ results: number[]; preview: any[] }>> = 
+        await this.api.post('/api/calculations/execute', options);
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: error.response?.data?.error?.code || 'NETWORK_ERROR',
+          message: error.response?.data?.error?.message || 'Failed to execute formula',
+          details: error.response?.data?.error?.details,
+        },
+      };
+    }
+  }
+
+  async saveCalculatedColumn(options: {
+    uploadId: string;
+    columnName: string;
+    formula: string;
+    description?: string;
+  }): Promise<ApiResponse<{ message: string; columnId: number }>> {
+    try {
+      const response: AxiosResponse<ApiResponse<{ message: string; columnId: number }>> = 
+        await this.api.post('/api/calculations/columns', options);
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: error.response?.data?.error?.code || 'NETWORK_ERROR',
+          message: error.response?.data?.error?.message || 'Failed to save calculated column',
+          details: error.response?.data?.error?.details,
+        },
+      };
+    }
+  }
 }
 
 // Create and export a singleton instance
