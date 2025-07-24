@@ -33,9 +33,31 @@ const isProduction = process.env.NODE_ENV === 'production';
 //   }
 // }));
 
-// CORS configuration - simplified and more permissive for debugging
+// CORS configuration - properly configured for production
+const allowedOrigins = [
+  'https://map5-nine.vercel.app', // Production frontend
+  'http://localhost:3000', // Development frontend
+  'http://localhost:5173', // Vite dev server
+];
+
+// Add environment-specific origins
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 const corsOptions = {
-  origin: true, // Allow all origins temporarily for debugging
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log(`CORS blocked origin: ${origin}`);
+      console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
+      callback(new Error('Not allowed by CORS'), false);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
@@ -45,21 +67,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-// Additional explicit CORS headers as fallback
-app.use((req, res, next) => {
-  // Allow all origins temporarily for debugging
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept, Origin');
-  
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
 
 // Body parsing middleware
 app.use(express.json({ limit: '25mb' }));

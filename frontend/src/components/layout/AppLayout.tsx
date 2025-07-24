@@ -32,6 +32,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     { name: 'Upload Data', href: '/upload', icon: DocumentArrowUpIcon },
     { name: 'Table Summary', href: '/table-summary', icon: TableCellsIcon },
     { name: 'Data Analysis', href: '/data', icon: ChartBarIcon },
+    { name: 'Charts', href: '/charts', icon: ChartBarIcon },
     { name: 'Strategies', href: '/strategies', icon: FolderIcon },
     { name: 'Tags', href: '/tags', icon: TagIcon },
   ];

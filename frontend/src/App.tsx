@@ -10,10 +10,12 @@ import { UploadPage } from './components/upload';
 import { TableSummaryPage } from './components/table-summary';
 import { TagsPage } from './components/tags';
 import { SettingsPage } from './components/settings';
+import { ChartsPage } from './pages/ChartsPage';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ErrorMonitoringToggle } from './components/common/ErrorMonitoringDashboard';
 import { ErrorReporter } from './utils/errors';
 import { LoadingSpinner } from './components/common/LoadingSpinner';
+import { NotFound } from './components/common/NotFound';
 
 // Lazy load heavy components that contain charts and calculations
 const DataPage = lazy(() => import('./components/data').then(module => ({ default: module.DataPage })));
@@ -103,6 +105,16 @@ function App() {
                 } 
               />
               <Route 
+                path="/charts" 
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <ChartsPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
                 path="/settings" 
                 element={
                   <ProtectedRoute>
@@ -113,6 +125,7 @@ function App() {
                 } 
               />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
             
             {/* Error monitoring dashboard for development - temporarily disabled */}
