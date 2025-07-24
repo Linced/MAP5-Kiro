@@ -129,9 +129,9 @@ export class CSVService {
       errors.push(`${inconsistentRows.length} rows have inconsistent column counts`);
     }
     
-    // Check for reasonable data size (under 1000 rows as per requirements)
-    if (data.rows.length > 1000) {
-      errors.push('CSV file exceeds maximum of 1000 rows for MVP version');
+    // Check for reasonable data size (under 10000 rows for performance)
+    if (data.rows.length > 10000) {
+      errors.push('CSV file exceeds maximum of 10,000 rows. Please split large datasets into smaller files.');
     }
     
     // Validate column names (basic validation)

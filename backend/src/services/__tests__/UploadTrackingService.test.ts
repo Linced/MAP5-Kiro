@@ -168,12 +168,12 @@ describe('UploadTrackingService', () => {
       // Mock stats - total row limit exceeded
       (database.get as jest.Mock)
         .mockResolvedValueOnce({ uploads_today: 5, rows_today: 500 }) // Today's stats
-        .mockResolvedValueOnce({ total_rows: 10000 }); // Total stats
+        .mockResolvedValueOnce({ total_rows: 50000 }); // Total stats
 
       const result = await UploadTrackingService.checkUploadLimits(1);
 
       expect(result.canUpload).toBe(false);
-      expect(result.reason).toBe('Total row limit of 10000 rows reached');
+      expect(result.reason).toBe('Total row limit of 50000 rows reached');
     });
 
     it('should handle null database values', async () => {

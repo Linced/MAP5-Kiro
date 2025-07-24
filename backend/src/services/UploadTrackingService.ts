@@ -173,7 +173,7 @@ export class UploadTrackingService {
     try {
       // Define MVP limits
       const MAX_UPLOADS_PER_DAY = 10;
-      const MAX_TOTAL_ROWS = 10000;
+      const MAX_TOTAL_ROWS = 50000;
       
       // Get today's uploads
       const today = new Date();

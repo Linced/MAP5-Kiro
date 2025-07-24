@@ -101,13 +101,13 @@ describe('CSVService', () => {
     it('should reject files with too many rows', () => {
       const data = {
         headers: ['Name'],
-        rows: Array(1001).fill({ Name: 'Test' })
+        rows: Array(10001).fill({ Name: 'Test' })
       };
       
       const result = CSVService.validateStructure(data);
       
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('CSV file exceeds maximum of 1000 rows for MVP version');
+      expect(result.errors).toContain('CSV file exceeds maximum of 10,000 rows. Please split large datasets into smaller files.');
     });
 
     it('should reject invalid column names', () => {
