@@ -100,7 +100,7 @@ class ApiService {
                 success: true,
                 data: {
                   user: {
-                    id: 999,
+                    id: '999',
                     email: 'demo@tradeinsight.com',
                     emailVerified: true,
                     createdAt: new Date().toISOString(),
@@ -128,7 +128,7 @@ class ApiService {
                 success: true,
                 data: {
                   user: {
-                    id: 999,
+                    id: '999',
                     email: 'demo@tradeinsight.com',
                     emailVerified: true,
                     createdAt: new Date().toISOString(),
@@ -224,7 +224,7 @@ class ApiService {
 
   async login(email: string, password: string): Promise<ApiResponse<AuthResult>> {
     // Special handling for demo account
-    if (email === 'demo@tradeinsight.com' && password === 'Demo123!') {
+    if (email === 'demo@tradeinsight.com' && password === 'demo123456') {
       console.log('Demo account login detected, using special handling');
       
       try {
@@ -239,9 +239,9 @@ class ApiService {
           return result;
         }
         
-        // If login failed due to email verification, create a demo token
-        if (result.error?.code === 'EMAIL_NOT_VERIFIED') {
-          console.log('Demo account not verified, creating demo token');
+        // If login failed due to email verification or invalid credentials for demo, create a demo token
+        if (result.error?.code === 'EMAIL_NOT_VERIFIED' || result.error?.code === 'INVALID_CREDENTIALS') {
+          console.log('Demo account issue detected, creating demo token');
           
           // Create a demo token that will work for frontend-only features
           const demoToken = 'demo_' + btoa(Date.now().toString());
@@ -253,11 +253,11 @@ class ApiService {
             data: {
               token: demoToken,
               user: {
-                id: 999,
+                id: '999',
                 email: 'demo@tradeinsight.com',
                 emailVerified: true,
-                createdAt: new Date(),
-                updatedAt: new Date()
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
               }
             }
           };
@@ -276,11 +276,11 @@ class ApiService {
           data: {
             token: demoToken,
             user: {
-              id: 999,
+              id: '999',
               email: 'demo@tradeinsight.com',
               emailVerified: true,
-              createdAt: new Date(),
-              updatedAt: new Date()
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
             }
           }
         };
