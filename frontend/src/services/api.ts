@@ -255,9 +255,8 @@ class ApiService {
               user: {
                 id: '999',
                 email: 'demo@tradeinsight.com',
-                emailVerified: true,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
+                name: 'Demo User',
+                emailVerified: true
               }
             }
           };
@@ -278,9 +277,8 @@ class ApiService {
             user: {
               id: '999',
               email: 'demo@tradeinsight.com',
-              emailVerified: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
+              name: 'Demo User',
+              emailVerified: true
             }
           }
         };

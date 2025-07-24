@@ -18,14 +18,26 @@
   -webkit-text-size-adjust: 100%;
 }
 
+:root.dark {
+  color-scheme: dark;
+  color: #ffffff;
+  background-color: #0f172a;
+}
+
 body {
   margin: 0;
   display: flex;
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
   width: 100%;
+}
+
+/* Smooth transitions for dark mode */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }

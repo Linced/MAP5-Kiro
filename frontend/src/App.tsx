@@ -10,7 +10,7 @@ import { UploadPage } from './components/upload';
 import { TableSummaryPage } from './components/table-summary';
 import { TagsPage } from './components/tags';
 import { SettingsPage } from './components/settings';
-import { ChartsPage } from './pages/ChartsPage';
+import ChartsPage from './pages/ChartsPage';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ErrorMonitoringToggle } from './components/common/ErrorMonitoringDashboard';
 import { ErrorReporter } from './utils/errors';

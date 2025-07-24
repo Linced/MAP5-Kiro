@@ -96,7 +96,7 @@ export const LoginForm: React.FC = () => {
                 <div><strong>Password:</strong> demo123456</div>
               </div>
               <p className="text-xs text-blue-600 mt-2">
-                Use these credentials to explore the application
+                Use these credentials to explore the application in demo mode
               </p>
             </div>
           </div>
