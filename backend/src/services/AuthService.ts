@@ -58,6 +58,38 @@ export class AuthService implements IAuthService {
       throw new Error('Password is required');
     }
 
+    // Special handling for demo account - create if doesn't exist
+    if (email === 'demo@tradeinsight.com' && password === 'demo123456') {
+      let user = await UserModel.findByEmail(email);
+      
+      if (!user) {
+        // Create demo user if it doesn't exist
+        console.log('Creating demo user...');
+        user = await UserModel.create(email, password);
+        // Immediately verify the demo user
+        await UserModel.verifyEmailById(user.id);
+        // Refresh user data
+        user = await UserModel.findById(user.id);
+      } else if (!user.emailVerified) {
+        // Verify demo user if not verified
+        console.log('Verifying demo user...');
+        await UserModel.verifyEmailById(user.id);
+        // Refresh user data
+        user = await UserModel.findById(user.id);
+      }
+
+      // Generate JWT token
+      const token = JWTUtils.generateToken(user);
+
+      // Return user without sensitive data
+      const { passwordHash, verificationToken, ...userWithoutSensitiveData } = user;
+
+      return {
+        user: userWithoutSensitiveData,
+        token
+      };
+    }
+
     // Find user by email
     const user = await UserModel.findByEmail(email);
     if (!user) {

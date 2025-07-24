@@ -72,10 +72,12 @@ router.post('/execute', authenticateToken, async (req, res) => {
     }
 
     // Get upload data
-    const data = await DataStorageService.getData(uploadId, req.user!.id, { 
-      page: 1, 
-      limit: Math.min(limit, 1000) 
-    });
+    const data = await DataStorageService.getDataRows(
+      uploadId, 
+      req.user!.id, 
+      1, 
+      Math.min(limit, 1000)
+    );
     
     if (!data || !data.rows) {
       return res.status(404).json({
@@ -131,8 +133,7 @@ router.post('/columns', authenticateToken, async (req, res) => {
       req.user!.id,
       uploadId,
       columnName,
-      formula,
-      description
+      formula
     );
     
     return res.json({
@@ -165,6 +166,7 @@ router.post('/preview', authenticateToken, async (req, res) => {
         error: {
           code: 'MISSING_REQUIRED_FIELDS',
           message: 'Formula and uploadId are required'
+        }
       });
     }
 
